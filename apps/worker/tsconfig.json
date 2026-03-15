@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "baseUrl": ".",
+    "paths": {
+      "@fsp-scheduler/shared-types": ["../../packages/shared-types/src"],
+      "@fsp-scheduler/database": ["../../packages/database/src"],
+      "@fsp-scheduler/fsp-client": ["../../packages/fsp-client/src"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "test"]
+}

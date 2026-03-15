@@ -1,0 +1,25 @@
+/**
+ * index.ts
+ * --------
+ * Agentic Scheduler — FSP Integration — shared-types package entry point
+ * -----------------------------------------------------------------------
+ * Re-exports all shared TypeScript types, interfaces, enums, and constants
+ * used across apps/api, apps/worker, and apps/web. This package has zero
+ * runtime dependencies — it contains types and constants only.
+ *
+ * Key exports: All types, enums, constants defined in sub-modules.
+ *              See individual files for details.
+ *
+ * Author: Agentic Scheduler Team
+ * Project: Agentic Scheduler — FSP Integration
+ * PR: PR-1 — Monorepo Setup
+ */
+
+/** Package identifier — used in bootstrap tests. */
+export const PACKAGE_NAME = '@fsp-scheduler/shared-types' as const;
+
+// Type and constant modules are added in subsequent PRs:
+// PR-4: Service Bus message types (PollJobMessage, ChangeEventMessage, SuggestionResultMessage)
+// PR-5: Database entity types, enums (SuggestionStatus, UseCaseType, etc.)
+// PR-6: FSP API request/response types
+// PR-8+: Scheduling constants (polling tiers, rate limits, LLM config, etc.)

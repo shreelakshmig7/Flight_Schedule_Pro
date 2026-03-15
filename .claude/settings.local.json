@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p /Users/shreelakshmigopinatharao/Flight_Schedule_Pro/docs)",
+      "Bash(cp \"/Users/shreelakshmigopinatharao/Desktop/Flight_Schedule_Pro/Flight_Schedule_Pro_Presearch.docx\" \"/Users/shreelakshmigopinatharao/Flight_Schedule_Pro/docs/\")",
+      "Bash(cp \"/Users/shreelakshmigopinatharao/Desktop/Flight_Schedule_Pro/Flight_Schedule_Pro_PRD.md\" \"/Users/shreelakshmigopinatharao/Flight_Schedule_Pro/docs/\")",
+      "Bash(find /Users/shreelakshmigopinatharao/Flight_Schedule_Pro -type f -name package.json -o -name requirements.txt -o -name setup.py -o -name pyproject.toml -o -name Makefile -o -name Dockerfile -o -name docker-compose.yml -o -name .env -o -name vite.config.* -o -name next.config.* -o -name webpack.config.* -o -name nuxt.config.* -o -name angular.json)",
+      "Bash(find /Users/shreelakshmigopinatharao/Flight_Schedule_Pro -type f -name *.json -o -name *.toml -o -name *.yml -o -name *.yaml -o -name *.ts -o -name *.js -o -name *.py -o -name Makefile -o -name Dockerfile -o -name .env*)",
+      "Bash(pandoc --track-changes=all \"/Users/shreelakshmigopinatharao/Flight_Schedule_Pro/docs/Flight_Schedule_Pro_Presearch.docx\" -o \"/Users/shreelakshmigopinatharao/Flight_Schedule_Pro/docs/Flight_Schedule_Pro_Presearch.md\")",
+      "Bash(python3 -c \"import zipfile, os; z = zipfile.ZipFile\\(''/Users/shreelakshmigopinatharao/Flight_Schedule_Pro/docs/Flight_Schedule_Pro_Presearch.docx''\\); print\\(z.namelist\\(\\)\\)\")",
+      "Bash(python3:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run:*)"
+    ]
+  }
+}

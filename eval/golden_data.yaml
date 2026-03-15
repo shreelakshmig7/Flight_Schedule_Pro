@@ -1,0 +1,13 @@
+# Agentic Scheduler — FSP Integration — Eval golden dataset
+# ----------------------------------------------------------
+# Test cases follow the format defined in CODING_STANDARDS.md §12.
+# Cases are added as use case handlers are implemented (PRs 13-16).
+#
+# Categories: happy_path | edge_case | adversarial | constraint_violation | rate_limit | fallback
+
+test_cases: []
+  # Test cases are added in:
+  # PR-13: Use Case A (waitlist automation)
+  # PR-14: Use Case B (reschedule on cancellation)
+  # PR-15: Use Case C (discovery flight)
+  # PR-16: Use Case D (next lesson)
