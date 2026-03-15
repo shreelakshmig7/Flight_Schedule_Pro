@@ -13,15 +13,32 @@
  * Project: Agentic Scheduler — FSP Integration
  * PR: PR-1 — Monorepo Setup
  * Updated: PR-5 — Prisma Schema and Database Migrations (added DatabaseModule)
+ * Updated: PR-7 — Authentication and Multi-Tenant Middleware (added AuthModule,
+ *           OperatorsModule, FspClientModule, APP_GUARD)
  */
 
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { DatabaseModule } from '@fsp-scheduler/database';
+import { FspClientModule } from '@fsp-scheduler/fsp-client';
 import { HealthController } from './health/health.controller';
+import { AuthModule } from './auth/auth.module';
+import { FspAuthGuard } from './auth/fsp-auth.guard';
+import { OperatorsModule } from './operators/operators.module';
 
 @Module({
-  imports: [DatabaseModule],
+  imports: [
+    DatabaseModule,
+    FspClientModule,
+    AuthModule,
+    OperatorsModule,
+  ],
   controllers: [HealthController],
-  providers: [],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: FspAuthGuard,
+    },
+  ],
 })
 export class AppModule {}

@@ -37,3 +37,6 @@ export {
 
 // PR-6: FSP API request/response types
 export * from './fsp.types';
+
+// PR-7: Operator and tenant context types
+export * from './operator.types';

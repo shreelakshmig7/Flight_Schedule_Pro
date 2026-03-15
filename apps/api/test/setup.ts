@@ -1,8 +1,8 @@
 /**
  * setup.ts
  * --------
- * Agentic Scheduler — FSP Integration — Vitest global test setup (worker)
- * -----------------------------------------------------------------------
+ * Agentic Scheduler — FSP Integration — Vitest global test setup (api)
+ * --------------------------------------------------------------------
  * Imports reflect-metadata once for the entire test suite so NestJS
  * dependency injection metadata (emitted by TypeScript decorators) is
  * available in all test files that instantiate NestJS modules.

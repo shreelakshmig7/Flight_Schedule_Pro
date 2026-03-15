@@ -5,8 +5,9 @@
  * ----------------------------------------------------------------------
  * Verifies that the NestJS API bootstraps correctly with the Fastify adapter
  * and returns { status: "ok" } with HTTP 200 on GET /health. This is the
- * liveness probe used by Azure Container Apps. PrismaService is overridden
- * with a no-op mock so no real database connection is required in tests.
+ * liveness probe used by Azure Container Apps. Uses a focused test module
+ * that imports only HealthController with no auth guard, since /health is
+ * decorated with @Public() and does not require authentication.
  *
  * Key exports: (test suite only — no exports)
  *
@@ -14,31 +15,20 @@
  * Project: Agentic Scheduler — FSP Integration
  * PR: PR-1 — Monorepo Setup
  * Updated: PR-5 — Mock PrismaService to avoid DATABASE_URL requirement in tests
+ * Updated: PR-7 — Use focused test module without APP_GUARD for health check
  */
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
-import { AppModule } from '../src/app.module';
-import { PrismaService } from '@fsp-scheduler/database';
-
-/** No-op PrismaService mock that avoids any real database connection. */
-const mockPrismaService = {
-  onModuleInit: async () => { /* noop */ },
-  onModuleDestroy: async () => { /* noop */ },
-  $connect: async () => { /* noop */ },
-  $disconnect: async () => { /* noop */ },
-};
+import { HealthController } from '../src/health/health.controller';
 
 describe('Health Check (e2e)', () => {
   let app: NestFastifyApplication;
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    })
-      .overrideProvider(PrismaService)
-      .useValue(mockPrismaService)
-      .compile();
+      controllers: [HealthController],
+    }).compile();
 
     app = moduleFixture.createNestApplication<NestFastifyApplication>(new FastifyAdapter());
     await app.init();

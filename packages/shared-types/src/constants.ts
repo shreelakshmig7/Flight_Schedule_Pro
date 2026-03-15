@@ -135,6 +135,20 @@ export const COMMUNICATION_STATUS = {
   BOUNCED: 'BOUNCED',
 } as const;
 
+// ── Authentication and token refresh constants ────────────────────────────────
+
+/**
+ * Number of minutes before token expiry at which the worker should proactively
+ * refresh the FSP Bearer token to avoid mid-request expiry.
+ */
+export const TOKEN_REFRESH_BUFFER_MINUTES = 5;
+
+/**
+ * Default polling tier assigned to newly bootstrapped operators.
+ * Can be upgraded to TIER1 by an administrator.
+ */
+export const OPERATOR_DEFAULT_POLLING_TIER = 'TIER2';
+
 // ── FSP API rate-limit and retry constants ────────────────────────────────────
 
 /**

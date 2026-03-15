@@ -34,7 +34,7 @@ module.exports = {
   },
   overrides: [
     {
-      // Allow 'any' in test mocks only
+      // Allow 'any' in test mocks only and relax unbound-method for vi.mocked() patterns
       files: ['**/*.spec.ts', '**/*.test.ts'],
       rules: {
         '@typescript-eslint/no-explicit-any': 'off',
@@ -42,6 +42,8 @@ module.exports = {
         '@typescript-eslint/no-unsafe-call': 'off',
         '@typescript-eslint/no-unsafe-member-access': 'off',
         'no-console': 'off',
+        // vi.mocked(service.method) patterns reference unbound methods by design
+        '@typescript-eslint/unbound-method': 'off',
       },
     },
     {
