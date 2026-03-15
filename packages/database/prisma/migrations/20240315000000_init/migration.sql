@@ -1,0 +1,2 @@
+-- Initial migration. Full schema (operators, suggestions, audit_log, etc.) added in PR-5.
+-- This migration ensures the database is ready for Prisma; no tables yet.

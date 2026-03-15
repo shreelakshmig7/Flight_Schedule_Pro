@@ -1,0 +1,142 @@
+# ============================================================
+# .github/workflows/deploy-develop.yml
+# Agentic Scheduler — FSP Integration — Deploy to Develop
+# --------------------------------------------------------
+# Triggered on push to the develop branch after CI passes.
+# Builds three Docker images (api, worker, web), pushes them
+# to Azure Container Registry using OIDC (no stored secrets),
+# and rolls out new revisions on all three Container Apps.
+#
+# Required GitHub secrets (Settings → Secrets → Actions):
+#   AZURE_CLIENT_ID       — app registration client ID
+#   AZURE_TENANT_ID       — Azure AD tenant ID
+#   AZURE_SUBSCRIPTION_ID — Azure subscription ID
+#
+# PR: PR-3 — CI/CD Pipeline
+# ============================================================
+
+name: Deploy — develop
+
+on:
+  push:
+    branches: [develop]
+
+concurrency:
+  group: deploy-develop
+  cancel-in-progress: false   # Never cancel an in-flight deploy
+
+# ── OIDC permissions ────────────────────────────────────────
+permissions:
+  id-token: write   # Required for azure/login OIDC
+  contents: read
+
+env:
+  ACR_LOGIN_SERVER:  acrfspdeviz2ieby4.azurecr.io
+  RESOURCE_GROUP:    rg-fsp-scheduler-develop
+  IMAGE_TAG:         ${{ github.sha }}
+
+jobs:
+  # ── Build & Push ────────────────────────────────────────────
+  build-and-push:
+    name: Build & Push Images
+    runs-on: ubuntu-latest
+    outputs:
+      image-tag: ${{ env.IMAGE_TAG }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id:       ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id:       ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Login to ACR
+        run: az acr login --name acrfspdeviz2ieby4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # ── API ────────────────────────────────────────────────
+      - name: Build & push API image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          push: true
+          tags: |
+            ${{ env.ACR_LOGIN_SERVER }}/api:${{ env.IMAGE_TAG }}
+            ${{ env.ACR_LOGIN_SERVER }}/api:latest
+          cache-from: type=registry,ref=${{ env.ACR_LOGIN_SERVER }}/api:buildcache
+          cache-to:   type=registry,ref=${{ env.ACR_LOGIN_SERVER }}/api:buildcache,mode=max
+
+      # ── Worker ────────────────────────────────────────────
+      - name: Build & push Worker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/worker/Dockerfile
+          push: true
+          tags: |
+            ${{ env.ACR_LOGIN_SERVER }}/worker:${{ env.IMAGE_TAG }}
+            ${{ env.ACR_LOGIN_SERVER }}/worker:latest
+          cache-from: type=registry,ref=${{ env.ACR_LOGIN_SERVER }}/worker:buildcache
+          cache-to:   type=registry,ref=${{ env.ACR_LOGIN_SERVER }}/worker:buildcache,mode=max
+
+      # ── Web ───────────────────────────────────────────────
+      - name: Build & push Web image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/web/Dockerfile
+          push: true
+          tags: |
+            ${{ env.ACR_LOGIN_SERVER }}/web:${{ env.IMAGE_TAG }}
+            ${{ env.ACR_LOGIN_SERVER }}/web:latest
+          cache-from: type=registry,ref=${{ env.ACR_LOGIN_SERVER }}/web:buildcache
+          cache-to:   type=registry,ref=${{ env.ACR_LOGIN_SERVER }}/web:buildcache,mode=max
+
+  # ── Deploy ──────────────────────────────────────────────────
+  deploy:
+    name: Deploy to Container Apps
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    environment: develop
+
+    steps:
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id:       ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id:       ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy API Container App
+        run: |
+          az containerapp update \
+            --name ca-api-develop \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --image ${{ env.ACR_LOGIN_SERVER }}/api:${{ env.IMAGE_TAG }}
+
+      - name: Deploy Worker Container App
+        run: |
+          az containerapp update \
+            --name ca-worker-develop \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --image ${{ env.ACR_LOGIN_SERVER }}/worker:${{ env.IMAGE_TAG }}
+
+      - name: Deploy Web Container App
+        run: |
+          az containerapp update \
+            --name ca-web-develop \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --image ${{ env.ACR_LOGIN_SERVER }}/web:${{ env.IMAGE_TAG }}
+
+      - name: Verify deployments
+        run: |
+          echo "API:    $(az containerapp show -n ca-api-develop    -g ${{ env.RESOURCE_GROUP }} --query 'properties.latestRevisionName' -o tsv)"
+          echo "Worker: $(az containerapp show -n ca-worker-develop -g ${{ env.RESOURCE_GROUP }} --query 'properties.latestRevisionName' -o tsv)"
+          echo "Web:    $(az containerapp show -n ca-web-develop    -g ${{ env.RESOURCE_GROUP }} --query 'properties.latestRevisionName' -o tsv)"

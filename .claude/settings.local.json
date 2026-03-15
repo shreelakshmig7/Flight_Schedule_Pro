@@ -10,7 +10,9 @@
       "Bash(python3 -c \"import zipfile, os; z = zipfile.ZipFile\\(''/Users/shreelakshmigopinatharao/Flight_Schedule_Pro/docs/Flight_Schedule_Pro_Presearch.docx''\\); print\\(z.namelist\\(\\)\\)\")",
       "Bash(python3:*)",
       "Bash(npm install:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(az acr:*)",
+      "Bash(az provider:*)"
     ]
   }
 }

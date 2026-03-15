@@ -1,0 +1,12 @@
+// Prisma schema for FSP Agentic Scheduler
+// Full entities (operators, suggestions, audit_log, discovery_prospects, communications) added in PR-5.
+// This minimal schema allows db:generate and db:migrate to run from repo root.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}

@@ -1,0 +1,1513 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "languageVersion": "2.0",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.41.2.15936",
+      "templateHash": "14950714460244981807"
+    }
+  },
+  "parameters": {
+    "environment": {
+      "type": "string",
+      "defaultValue": "develop",
+      "allowedValues": [
+        "develop",
+        "staging",
+        "production"
+      ],
+      "metadata": {
+        "description": "Target environment. Controls SKU selection and resource naming."
+      }
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "westus2",
+      "allowedValues": [
+        "eastus",
+        "eastus2",
+        "westus2",
+        "centralus"
+      ],
+      "metadata": {
+        "description": "Azure region. Use a region where your subscription can provision PostgreSQL Flexible Server (e.g. westus2, centralus if eastus/eastus2 are restricted)."
+      }
+    },
+    "fspSubscriptionKey": {
+      "type": "securestring",
+      "metadata": {
+        "description": "FSP API subscription key — stored in Key Vault only, never logged."
+      }
+    },
+    "anthropicApiKey": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Anthropic API key for Claude 3.5 Sonnet calls — stored in Key Vault only."
+      }
+    },
+    "dbAdminPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "PostgreSQL administrator password — stored in Key Vault only."
+      }
+    },
+    "fspEnvironment": {
+      "type": "string",
+      "defaultValue": "develop",
+      "metadata": {
+        "description": "FSP environment identifier string."
+      }
+    },
+    "fspApiBaseUrl": {
+      "type": "string",
+      "defaultValue": "https://development-fsp.azure-api.net",
+      "metadata": {
+        "description": "FSP authentication gateway (Azure APIM) base URL."
+      }
+    },
+    "fspCoreBaseUrl": {
+      "type": "string",
+      "defaultValue": "https://api-develop.flightschedulepro.com",
+      "metadata": {
+        "description": "FSP direct API base URL."
+      }
+    },
+    "fspCurriculumBaseUrl": {
+      "type": "string",
+      "defaultValue": "https://curriculum-api-develop.flightschedulepro.com",
+      "metadata": {
+        "description": "FSP curriculum API base URL."
+      }
+    }
+  },
+  "variables": {
+    "projectName": "fsp-scheduler",
+    "dbAdminUser": "fspadmin",
+    "uniqueSuffix": "[take(uniqueString(resourceGroup().id), 8)]",
+    "tags": {
+      "environment": "[parameters('environment')]",
+      "project": "[variables('projectName')]",
+      "managed-by": "bicep"
+    },
+    "logAnalyticsName": "[format('log-fsp-{0}-{1}', parameters('environment'), variables('uniqueSuffix'))]",
+    "appInsightsName": "[format('appi-fsp-{0}-{1}', parameters('environment'), variables('uniqueSuffix'))]",
+    "serviceBusNamespaceName": "[format('sb-fsp-{0}-{1}', parameters('environment'), variables('uniqueSuffix'))]",
+    "postgresServerName": "[format('psql-fsp-{0}-{1}', parameters('environment'), variables('uniqueSuffix'))]",
+    "keyVaultName": "[format('kv-fsp-{0}-{1}', take(parameters('environment'), 3), variables('uniqueSuffix'))]",
+    "containerAppsEnvName": "[format('cae-fsp-{0}-{1}', parameters('environment'), variables('uniqueSuffix'))]",
+    "apiIdentityName": "[format('id-ca-api-{0}-{1}', parameters('environment'), parameters('location'))]",
+    "workerIdentityName": "[format('id-ca-worker-{0}-{1}', parameters('environment'), parameters('location'))]",
+    "webIdentityName": "[format('id-ca-web-{0}-{1}', parameters('environment'), parameters('location'))]",
+    "kvSecretsUserRoleDefinitionId": "4633458b-17de-408a-b874-0445c86b69e6"
+  },
+  "resources": {
+    "apiManagedIdentity": {
+      "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+      "apiVersion": "2023-01-31",
+      "name": "[variables('apiIdentityName')]",
+      "location": "[parameters('location')]",
+      "tags": "[variables('tags')]"
+    },
+    "workerManagedIdentity": {
+      "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+      "apiVersion": "2023-01-31",
+      "name": "[variables('workerIdentityName')]",
+      "location": "[parameters('location')]",
+      "tags": "[variables('tags')]"
+    },
+    "webManagedIdentity": {
+      "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+      "apiVersion": "2023-01-31",
+      "name": "[variables('webIdentityName')]",
+      "location": "[parameters('location')]",
+      "tags": "[variables('tags')]"
+    },
+    "existingKeyVault": {
+      "existing": true,
+      "type": "Microsoft.KeyVault/vaults",
+      "apiVersion": "2023-07-01",
+      "name": "[variables('keyVaultName')]",
+      "dependsOn": [
+        "keyVault"
+      ]
+    },
+    "apiKvRoleAssignment": {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]",
+      "name": "[guid(resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName')), resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('apiIdentityName')), variables('kvSecretsUserRoleDefinitionId'))]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('kvSecretsUserRoleDefinitionId'))]",
+        "principalId": "[reference('apiManagedIdentity').principalId]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "apiManagedIdentity",
+        "keyVault"
+      ]
+    },
+    "workerKvRoleAssignment": {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]",
+      "name": "[guid(resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName')), resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('workerIdentityName')), variables('kvSecretsUserRoleDefinitionId'))]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('kvSecretsUserRoleDefinitionId'))]",
+        "principalId": "[reference('workerManagedIdentity').principalId]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "keyVault",
+        "workerManagedIdentity"
+      ]
+    },
+    "webKvRoleAssignment": {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]",
+      "name": "[guid(resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName')), resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('webIdentityName')), variables('kvSecretsUserRoleDefinitionId'))]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('kvSecretsUserRoleDefinitionId'))]",
+        "principalId": "[reference('webManagedIdentity').principalId]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "keyVault",
+        "webManagedIdentity"
+      ]
+    },
+    "appInsights": {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "deploy-appinsights",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "tags": {
+            "value": "[variables('tags')]"
+          },
+          "logAnalyticsName": {
+            "value": "[variables('logAnalyticsName')]"
+          },
+          "appInsightsName": {
+            "value": "[variables('appInsightsName')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "languageVersion": "2.0",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.41.2.15936",
+              "templateHash": "10243718128756921326"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "metadata": {
+                "description": "Azure region for all resources."
+              }
+            },
+            "tags": {
+              "type": "object",
+              "metadata": {
+                "description": "Resource tags applied to every resource in this module."
+              }
+            },
+            "logAnalyticsName": {
+              "type": "string",
+              "metadata": {
+                "description": "Name for the Log Analytics workspace."
+              }
+            },
+            "appInsightsName": {
+              "type": "string",
+              "metadata": {
+                "description": "Name for the Application Insights component."
+              }
+            }
+          },
+          "resources": {
+            "logAnalyticsWorkspace": {
+              "type": "Microsoft.OperationalInsights/workspaces",
+              "apiVersion": "2022-10-01",
+              "name": "[parameters('logAnalyticsName')]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "properties": {
+                "sku": {
+                  "name": "PerGB2018"
+                },
+                "retentionInDays": 30,
+                "publicNetworkAccessForIngestion": "Enabled",
+                "publicNetworkAccessForQuery": "Enabled"
+              }
+            },
+            "appInsights": {
+              "type": "Microsoft.Insights/components",
+              "apiVersion": "2020-02-02",
+              "name": "[parameters('appInsightsName')]",
+              "location": "[parameters('location')]",
+              "kind": "web",
+              "tags": "[parameters('tags')]",
+              "properties": {
+                "Application_Type": "web",
+                "WorkspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('logAnalyticsName'))]",
+                "IngestionMode": "LogAnalytics",
+                "publicNetworkAccessForIngestion": "Enabled",
+                "publicNetworkAccessForQuery": "Enabled"
+              },
+              "dependsOn": [
+                "logAnalyticsWorkspace"
+              ]
+            }
+          },
+          "outputs": {
+            "appInsightsConnectionString": {
+              "type": "string",
+              "metadata": {
+                "description": "Full Application Insights connection string for SDK initialisation."
+              },
+              "value": "[reference('appInsights').ConnectionString]"
+            },
+            "appInsightsInstrumentationKey": {
+              "type": "string",
+              "metadata": {
+                "description": "Application Insights instrumentation key (legacy — prefer connection string)."
+              },
+              "value": "[reference('appInsights').InstrumentationKey]"
+            },
+            "logAnalyticsWorkspaceId": {
+              "type": "string",
+              "metadata": {
+                "description": "Log Analytics workspace resource ID."
+              },
+              "value": "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('logAnalyticsName'))]"
+            },
+            "logAnalyticsCustomerId": {
+              "type": "string",
+              "metadata": {
+                "description": "Log Analytics workspace GUID, required by Container Apps environment appLogsConfiguration."
+              },
+              "value": "[reference('logAnalyticsWorkspace').customerId]"
+            },
+            "logAnalyticsSharedKey": {
+              "type": "securestring",
+              "metadata": {
+                "description": "Log Analytics primary shared key — passed to Container Apps environment. Marked @secure() to suppress from deployment outputs."
+              },
+              "value": "[listKeys('logAnalyticsWorkspace', '2022-10-01').primarySharedKey]"
+            }
+          }
+        }
+      }
+    },
+    "serviceBus": {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "deploy-servicebus",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "tags": {
+            "value": "[variables('tags')]"
+          },
+          "namespaceName": {
+            "value": "[variables('serviceBusNamespaceName')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "languageVersion": "2.0",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.41.2.15936",
+              "templateHash": "12442915933287002323"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "metadata": {
+                "description": "Azure region for all resources."
+              }
+            },
+            "tags": {
+              "type": "object",
+              "metadata": {
+                "description": "Resource tags applied to every resource in this module."
+              }
+            },
+            "namespaceName": {
+              "type": "string",
+              "metadata": {
+                "description": "Globally unique name for the Service Bus namespace."
+              }
+            }
+          },
+          "resources": {
+            "serviceBusNamespace": {
+              "type": "Microsoft.ServiceBus/namespaces",
+              "apiVersion": "2022-10-01-preview",
+              "name": "[parameters('namespaceName')]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "sku": {
+                "name": "Standard",
+                "tier": "Standard"
+              },
+              "properties": {
+                "minimumTlsVersion": "1.2",
+                "publicNetworkAccess": "Enabled"
+              }
+            },
+            "pollJobsQueue": {
+              "type": "Microsoft.ServiceBus/namespaces/queues",
+              "apiVersion": "2022-10-01-preview",
+              "name": "[format('{0}/{1}', parameters('namespaceName'), 'poll-jobs')]",
+              "properties": {
+                "deadLetteringOnMessageExpiration": true,
+                "maxDeliveryCount": 5,
+                "lockDuration": "PT1M",
+                "defaultMessageTimeToLive": "P14D",
+                "enablePartitioning": false,
+                "requiresDuplicateDetection": false,
+                "requiresSession": false
+              },
+              "dependsOn": [
+                "serviceBusNamespace"
+              ]
+            },
+            "changeEventsQueue": {
+              "type": "Microsoft.ServiceBus/namespaces/queues",
+              "apiVersion": "2022-10-01-preview",
+              "name": "[format('{0}/{1}', parameters('namespaceName'), 'change-events')]",
+              "properties": {
+                "deadLetteringOnMessageExpiration": true,
+                "maxDeliveryCount": 5,
+                "lockDuration": "PT1M",
+                "defaultMessageTimeToLive": "P14D",
+                "enablePartitioning": false,
+                "requiresDuplicateDetection": false,
+                "requiresSession": false
+              },
+              "dependsOn": [
+                "serviceBusNamespace"
+              ]
+            },
+            "suggestionResultsQueue": {
+              "type": "Microsoft.ServiceBus/namespaces/queues",
+              "apiVersion": "2022-10-01-preview",
+              "name": "[format('{0}/{1}', parameters('namespaceName'), 'suggestion-results')]",
+              "properties": {
+                "deadLetteringOnMessageExpiration": true,
+                "maxDeliveryCount": 5,
+                "lockDuration": "PT1M",
+                "defaultMessageTimeToLive": "P14D",
+                "enablePartitioning": false,
+                "requiresDuplicateDetection": false,
+                "requiresSession": false
+              },
+              "dependsOn": [
+                "serviceBusNamespace"
+              ]
+            },
+            "rootAuthRule": {
+              "existing": true,
+              "type": "Microsoft.ServiceBus/namespaces/AuthorizationRules",
+              "apiVersion": "2022-10-01-preview",
+              "name": "[format('{0}/{1}', parameters('namespaceName'), 'RootManageSharedAccessKey')]",
+              "dependsOn": [
+                "serviceBusNamespace"
+              ]
+            }
+          },
+          "outputs": {
+            "serviceBusNamespaceName": {
+              "type": "string",
+              "metadata": {
+                "description": "Service Bus namespace name."
+              },
+              "value": "[parameters('namespaceName')]"
+            },
+            "serviceBusNamespaceFqdn": {
+              "type": "string",
+              "metadata": {
+                "description": "Service Bus namespace FQDN (e.g. sb-name.servicebus.windows.net)."
+              },
+              "value": "[format('{0}.servicebus.windows.net', parameters('namespaceName'))]"
+            },
+            "primaryConnectionString": {
+              "type": "securestring",
+              "metadata": {
+                "description": "Primary connection string — stored in Key Vault by main.bicep. Marked @secure() to suppress from deployment outputs."
+              },
+              "value": "[listKeys('rootAuthRule', '2022-10-01-preview').primaryConnectionString]"
+            }
+          }
+        }
+      }
+    },
+    "postgresql": {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "deploy-postgresql",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "tags": {
+            "value": "[variables('tags')]"
+          },
+          "serverName": {
+            "value": "[variables('postgresServerName')]"
+          },
+          "environment": {
+            "value": "[parameters('environment')]"
+          },
+          "adminUser": {
+            "value": "[variables('dbAdminUser')]"
+          },
+          "adminPassword": {
+            "value": "[parameters('dbAdminPassword')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.41.2.15936",
+              "templateHash": "12544608505950820333"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "metadata": {
+                "description": "Azure region for all resources."
+              }
+            },
+            "tags": {
+              "type": "object",
+              "metadata": {
+                "description": "Resource tags applied to every resource in this module."
+              }
+            },
+            "serverName": {
+              "type": "string",
+              "metadata": {
+                "description": "Globally unique server name (3-63 chars, lowercase alphanumeric + hyphens)."
+              }
+            },
+            "environment": {
+              "type": "string",
+              "allowedValues": [
+                "develop",
+                "staging",
+                "production"
+              ],
+              "metadata": {
+                "description": "Target environment — controls the SKU tier."
+              }
+            },
+            "adminUser": {
+              "type": "string",
+              "metadata": {
+                "description": "PostgreSQL administrator login username."
+              }
+            },
+            "adminPassword": {
+              "type": "securestring",
+              "metadata": {
+                "description": "PostgreSQL administrator password — stored in Key Vault, never logged."
+              }
+            }
+          },
+          "variables": {
+            "skuName": "[if(equals(parameters('environment'), 'production'), 'Standard_D2s_v3', 'Standard_B1ms')]",
+            "skuTier": "[if(equals(parameters('environment'), 'production'), 'GeneralPurpose', 'Burstable')]",
+            "storageSizeGB": "[if(equals(parameters('environment'), 'production'), 64, 32)]"
+          },
+          "resources": [
+            {
+              "type": "Microsoft.DBforPostgreSQL/flexibleServers",
+              "apiVersion": "2023-06-01-preview",
+              "name": "[parameters('serverName')]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "sku": {
+                "name": "[variables('skuName')]",
+                "tier": "[variables('skuTier')]"
+              },
+              "properties": {
+                "version": "15",
+                "administratorLogin": "[parameters('adminUser')]",
+                "administratorLoginPassword": "[parameters('adminPassword')]",
+                "authConfig": {
+                  "activeDirectoryAuth": "Disabled",
+                  "passwordAuth": "Enabled"
+                },
+                "storage": {
+                  "storageSizeGB": "[variables('storageSizeGB')]",
+                  "autoGrow": "Disabled"
+                },
+                "backup": {
+                  "backupRetentionDays": 7,
+                  "geoRedundantBackup": "Disabled"
+                },
+                "highAvailability": {
+                  "mode": "Disabled"
+                },
+                "maintenanceWindow": {
+                  "customWindow": "Disabled"
+                }
+              }
+            },
+            {
+              "type": "Microsoft.DBforPostgreSQL/flexibleServers/databases",
+              "apiVersion": "2023-06-01-preview",
+              "name": "[format('{0}/{1}', parameters('serverName'), 'fsp_scheduler')]",
+              "properties": {
+                "charset": "UTF8",
+                "collation": "en_US.utf8"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', parameters('serverName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.DBforPostgreSQL/flexibleServers/firewallRules",
+              "apiVersion": "2023-06-01-preview",
+              "name": "[format('{0}/{1}', parameters('serverName'), 'AllowAllAzureServices')]",
+              "properties": {
+                "startIpAddress": "0.0.0.0",
+                "endIpAddress": "0.0.0.0"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', parameters('serverName'))]"
+              ]
+            }
+          ],
+          "outputs": {
+            "serverFqdn": {
+              "type": "string",
+              "metadata": {
+                "description": "Fully qualified domain name of the PostgreSQL server."
+              },
+              "value": "[reference(resourceId('Microsoft.DBforPostgreSQL/flexibleServers', parameters('serverName')), '2023-06-01-preview').fullyQualifiedDomainName]"
+            },
+            "serverName": {
+              "type": "string",
+              "metadata": {
+                "description": "Server name (used to construct DATABASE_URL in main.bicep)."
+              },
+              "value": "[parameters('serverName')]"
+            }
+          }
+        }
+      }
+    },
+    "keyVault": {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "deploy-keyvault",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "tags": {
+            "value": "[variables('tags')]"
+          },
+          "keyVaultName": {
+            "value": "[variables('keyVaultName')]"
+          },
+          "fspSubscriptionKey": {
+            "value": "[parameters('fspSubscriptionKey')]"
+          },
+          "anthropicApiKey": {
+            "value": "[parameters('anthropicApiKey')]"
+          },
+          "dbAdminPassword": {
+            "value": "[parameters('dbAdminPassword')]"
+          },
+          "databaseUrl": {
+            "value": "[format('postgresql://{0}:{1}@{2}/fsp_scheduler?sslmode=require', variables('dbAdminUser'), parameters('dbAdminPassword'), reference('postgresql').outputs.serverFqdn.value)]"
+          },
+          "serviceBusConnectionString": {
+            "value": "[listOutputsWithSecureValues('serviceBus', '2025-04-01').primaryConnectionString]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.41.2.15936",
+              "templateHash": "6293418668258949080"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "metadata": {
+                "description": "Azure region for all resources."
+              }
+            },
+            "tags": {
+              "type": "object",
+              "metadata": {
+                "description": "Resource tags applied to every resource in this module."
+              }
+            },
+            "keyVaultName": {
+              "type": "string",
+              "metadata": {
+                "description": "Globally unique Key Vault name (3-24 alphanumeric chars + hyphens)."
+              }
+            },
+            "fspSubscriptionKey": {
+              "type": "securestring",
+              "metadata": {
+                "description": "FSP API subscription key — never stored in plaintext outside Key Vault."
+              }
+            },
+            "anthropicApiKey": {
+              "type": "securestring",
+              "metadata": {
+                "description": "Anthropic API key — never stored in plaintext outside Key Vault."
+              }
+            },
+            "dbAdminPassword": {
+              "type": "securestring",
+              "metadata": {
+                "description": "PostgreSQL administrator password — stored for reference; DATABASE_URL is the primary secret."
+              }
+            },
+            "databaseUrl": {
+              "type": "securestring",
+              "metadata": {
+                "description": "Full PostgreSQL connection string (postgresql://user:pass@host/db?sslmode=require)."
+              }
+            },
+            "serviceBusConnectionString": {
+              "type": "securestring",
+              "metadata": {
+                "description": "Azure Service Bus primary connection string."
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.KeyVault/vaults",
+              "apiVersion": "2023-07-01",
+              "name": "[parameters('keyVaultName')]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "properties": {
+                "tenantId": "[subscription().tenantId]",
+                "sku": {
+                  "family": "A",
+                  "name": "standard"
+                },
+                "enableRbacAuthorization": true,
+                "enableSoftDelete": true,
+                "softDeleteRetentionInDays": 90,
+                "enablePurgeProtection": true,
+                "publicNetworkAccess": "Enabled",
+                "networkAcls": {
+                  "defaultAction": "Allow",
+                  "bypass": "AzureServices"
+                }
+              }
+            },
+            {
+              "type": "Microsoft.KeyVault/vaults/secrets",
+              "apiVersion": "2023-07-01",
+              "name": "[format('{0}/{1}', parameters('keyVaultName'), 'fsp-subscription-key')]",
+              "properties": {
+                "value": "[parameters('fspSubscriptionKey')]",
+                "attributes": {
+                  "enabled": true
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.KeyVault/vaults/secrets",
+              "apiVersion": "2023-07-01",
+              "name": "[format('{0}/{1}', parameters('keyVaultName'), 'anthropic-api-key')]",
+              "properties": {
+                "value": "[parameters('anthropicApiKey')]",
+                "attributes": {
+                  "enabled": true
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.KeyVault/vaults/secrets",
+              "apiVersion": "2023-07-01",
+              "name": "[format('{0}/{1}', parameters('keyVaultName'), 'db-admin-password')]",
+              "properties": {
+                "value": "[parameters('dbAdminPassword')]",
+                "attributes": {
+                  "enabled": true
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.KeyVault/vaults/secrets",
+              "apiVersion": "2023-07-01",
+              "name": "[format('{0}/{1}', parameters('keyVaultName'), 'database-url')]",
+              "properties": {
+                "value": "[parameters('databaseUrl')]",
+                "attributes": {
+                  "enabled": true
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.KeyVault/vaults/secrets",
+              "apiVersion": "2023-07-01",
+              "name": "[format('{0}/{1}', parameters('keyVaultName'), 'service-bus-connection-string')]",
+              "properties": {
+                "value": "[parameters('serviceBusConnectionString')]",
+                "attributes": {
+                  "enabled": true
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]"
+              ]
+            }
+          ],
+          "outputs": {
+            "keyVaultName": {
+              "type": "string",
+              "metadata": {
+                "description": "Key Vault name — used in main.bicep for existing resource reference."
+              },
+              "value": "[parameters('keyVaultName')]"
+            },
+            "keyVaultUri": {
+              "type": "string",
+              "metadata": {
+                "description": "Key Vault URI (e.g. https://kv-name.vault.azure.net/) — used in Container Apps secret references."
+              },
+              "value": "[reference(resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName')), '2023-07-01').vaultUri]"
+            },
+            "keyVaultId": {
+              "type": "string",
+              "metadata": {
+                "description": "Key Vault resource ID."
+              },
+              "value": "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "postgresql",
+        "serviceBus"
+      ]
+    },
+    "containerApps": {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "deploy-container-apps",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "tags": {
+            "value": "[variables('tags')]"
+          },
+          "environment": {
+            "value": "[parameters('environment')]"
+          },
+          "containerAppsEnvName": {
+            "value": "[variables('containerAppsEnvName')]"
+          },
+          "logAnalyticsCustomerId": {
+            "value": "[reference('appInsights').outputs.logAnalyticsCustomerId.value]"
+          },
+          "logAnalyticsSharedKey": {
+            "value": "[listOutputsWithSecureValues('appInsights', '2025-04-01').logAnalyticsSharedKey]"
+          },
+          "keyVaultUri": {
+            "value": "[reference('keyVault').outputs.keyVaultUri.value]"
+          },
+          "fspApiBaseUrl": {
+            "value": "[parameters('fspApiBaseUrl')]"
+          },
+          "fspCoreBaseUrl": {
+            "value": "[parameters('fspCoreBaseUrl')]"
+          },
+          "fspCurriculumBaseUrl": {
+            "value": "[parameters('fspCurriculumBaseUrl')]"
+          },
+          "fspEnvironment": {
+            "value": "[parameters('fspEnvironment')]"
+          },
+          "appInsightsConnectionString": {
+            "value": "[reference('appInsights').outputs.appInsightsConnectionString.value]"
+          },
+          "serviceBusNamespaceFqdn": {
+            "value": "[reference('serviceBus').outputs.serviceBusNamespaceFqdn.value]"
+          },
+          "apiManagedIdentityId": {
+            "value": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('apiIdentityName'))]"
+          },
+          "apiManagedIdentityClientId": {
+            "value": "[reference('apiManagedIdentity').clientId]"
+          },
+          "workerManagedIdentityId": {
+            "value": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('workerIdentityName'))]"
+          },
+          "workerManagedIdentityClientId": {
+            "value": "[reference('workerManagedIdentity').clientId]"
+          },
+          "webManagedIdentityId": {
+            "value": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('webIdentityName'))]"
+          },
+          "webManagedIdentityClientId": {
+            "value": "[reference('webManagedIdentity').clientId]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.41.2.15936",
+              "templateHash": "16522390731569100817"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "metadata": {
+                "description": "Azure region for all resources."
+              }
+            },
+            "tags": {
+              "type": "object",
+              "metadata": {
+                "description": "Resource tags applied to every resource in this module."
+              }
+            },
+            "environment": {
+              "type": "string",
+              "allowedValues": [
+                "develop",
+                "staging",
+                "production"
+              ],
+              "metadata": {
+                "description": "Target environment identifier (develop | staging | production)."
+              }
+            },
+            "containerAppsEnvName": {
+              "type": "string",
+              "metadata": {
+                "description": "Name for the Container Apps managed environment."
+              }
+            },
+            "logAnalyticsCustomerId": {
+              "type": "string",
+              "metadata": {
+                "description": "Log Analytics workspace GUID for appLogsConfiguration."
+              }
+            },
+            "logAnalyticsSharedKey": {
+              "type": "securestring",
+              "metadata": {
+                "description": "Log Analytics primary shared key for appLogsConfiguration."
+              }
+            },
+            "keyVaultUri": {
+              "type": "string",
+              "metadata": {
+                "description": "Key Vault URI (e.g. https://kv-name.vault.azure.net/) for secret references."
+              }
+            },
+            "fspApiBaseUrl": {
+              "type": "string",
+              "metadata": {
+                "description": "FSP authentication gateway base URL."
+              }
+            },
+            "fspCoreBaseUrl": {
+              "type": "string",
+              "metadata": {
+                "description": "FSP direct API base URL."
+              }
+            },
+            "fspCurriculumBaseUrl": {
+              "type": "string",
+              "metadata": {
+                "description": "FSP curriculum API base URL."
+              }
+            },
+            "fspEnvironment": {
+              "type": "string",
+              "metadata": {
+                "description": "FSP environment identifier string (e.g. develop)."
+              }
+            },
+            "appInsightsConnectionString": {
+              "type": "string",
+              "metadata": {
+                "description": "Application Insights connection string for telemetry."
+              }
+            },
+            "serviceBusNamespaceFqdn": {
+              "type": "string",
+              "metadata": {
+                "description": "Service Bus namespace FQDN (e.g. sb-name.servicebus.windows.net)."
+              }
+            },
+            "apiManagedIdentityId": {
+              "type": "string",
+              "metadata": {
+                "description": "Resource ID of the api app user-assigned managed identity."
+              }
+            },
+            "apiManagedIdentityClientId": {
+              "type": "string",
+              "metadata": {
+                "description": "Client ID of the api app user-assigned managed identity (for KV secret identity field)."
+              }
+            },
+            "workerManagedIdentityId": {
+              "type": "string",
+              "metadata": {
+                "description": "Resource ID of the worker app user-assigned managed identity."
+              }
+            },
+            "workerManagedIdentityClientId": {
+              "type": "string",
+              "metadata": {
+                "description": "Client ID of the worker app user-assigned managed identity."
+              }
+            },
+            "webManagedIdentityId": {
+              "type": "string",
+              "metadata": {
+                "description": "Resource ID of the web app user-assigned managed identity."
+              }
+            },
+            "webManagedIdentityClientId": {
+              "type": "string",
+              "metadata": {
+                "description": "Client ID of the web app user-assigned managed identity."
+              }
+            }
+          },
+          "variables": {
+            "placeholderImage": "mcr.microsoft.com/azuredocs/containerapps-helloworld:latest"
+          },
+          "resources": [
+            {
+              "type": "Microsoft.App/managedEnvironments",
+              "apiVersion": "2023-05-01",
+              "name": "[parameters('containerAppsEnvName')]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "properties": {
+                "appLogsConfiguration": {
+                  "destination": "log-analytics",
+                  "logAnalyticsConfiguration": {
+                    "customerId": "[parameters('logAnalyticsCustomerId')]",
+                    "sharedKey": "[parameters('logAnalyticsSharedKey')]"
+                  }
+                }
+              }
+            },
+            {
+              "type": "Microsoft.App/containerApps",
+              "apiVersion": "2023-05-01",
+              "name": "[format('ca-api-{0}', parameters('environment'))]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "identity": {
+                "type": "UserAssigned",
+                "userAssignedIdentities": {
+                  "[format('{0}', parameters('apiManagedIdentityId'))]": {}
+                }
+              },
+              "properties": {
+                "managedEnvironmentId": "[resourceId('Microsoft.App/managedEnvironments', parameters('containerAppsEnvName'))]",
+                "configuration": {
+                  "secrets": [
+                    {
+                      "name": "fsp-subscription-key",
+                      "keyVaultUrl": "[format('{0}secrets/fsp-subscription-key', parameters('keyVaultUri'))]",
+                      "identity": "[parameters('apiManagedIdentityId')]"
+                    },
+                    {
+                      "name": "anthropic-api-key",
+                      "keyVaultUrl": "[format('{0}secrets/anthropic-api-key', parameters('keyVaultUri'))]",
+                      "identity": "[parameters('apiManagedIdentityId')]"
+                    },
+                    {
+                      "name": "database-url",
+                      "keyVaultUrl": "[format('{0}secrets/database-url', parameters('keyVaultUri'))]",
+                      "identity": "[parameters('apiManagedIdentityId')]"
+                    },
+                    {
+                      "name": "service-bus-connection-string",
+                      "keyVaultUrl": "[format('{0}secrets/service-bus-connection-string', parameters('keyVaultUri'))]",
+                      "identity": "[parameters('apiManagedIdentityId')]"
+                    }
+                  ],
+                  "ingress": {
+                    "external": true,
+                    "targetPort": 3000,
+                    "transport": "auto",
+                    "allowInsecure": false
+                  },
+                  "activeRevisionsMode": "Single"
+                },
+                "template": {
+                  "containers": [
+                    {
+                      "name": "api",
+                      "image": "[variables('placeholderImage')]",
+                      "resources": {
+                        "cpu": "[json('0.5')]",
+                        "memory": "1Gi"
+                      },
+                      "env": [
+                        {
+                          "name": "NODE_ENV",
+                          "value": "production"
+                        },
+                        {
+                          "name": "PORT",
+                          "value": "3000"
+                        },
+                        {
+                          "name": "FSP_API_BASE_URL",
+                          "value": "[parameters('fspApiBaseUrl')]"
+                        },
+                        {
+                          "name": "FSP_CORE_BASE_URL",
+                          "value": "[parameters('fspCoreBaseUrl')]"
+                        },
+                        {
+                          "name": "FSP_CURRICULUM_BASE_URL",
+                          "value": "[parameters('fspCurriculumBaseUrl')]"
+                        },
+                        {
+                          "name": "FSP_ENVIRONMENT",
+                          "value": "[parameters('fspEnvironment')]"
+                        },
+                        {
+                          "name": "AZURE_SERVICE_BUS_POLL_QUEUE",
+                          "value": "poll-jobs"
+                        },
+                        {
+                          "name": "AZURE_SERVICE_BUS_CHANGE_EVENTS_QUEUE",
+                          "value": "change-events"
+                        },
+                        {
+                          "name": "AZURE_SERVICE_BUS_SUGGESTION_RESULTS_QUEUE",
+                          "value": "suggestion-results"
+                        },
+                        {
+                          "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+                          "value": "[parameters('appInsightsConnectionString')]"
+                        },
+                        {
+                          "name": "FSP_SUBSCRIPTION_KEY",
+                          "secretRef": "fsp-subscription-key"
+                        },
+                        {
+                          "name": "ANTHROPIC_API_KEY",
+                          "secretRef": "anthropic-api-key"
+                        },
+                        {
+                          "name": "DATABASE_URL",
+                          "secretRef": "database-url"
+                        },
+                        {
+                          "name": "AZURE_SERVICE_BUS_CONNECTION_STRING",
+                          "secretRef": "service-bus-connection-string"
+                        }
+                      ]
+                    }
+                  ],
+                  "scale": {
+                    "minReplicas": 1,
+                    "maxReplicas": 10,
+                    "rules": [
+                      {
+                        "name": "cpu-scaling",
+                        "custom": {
+                          "type": "cpu",
+                          "metadata": {
+                            "type": "Utilization",
+                            "value": "70"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.App/managedEnvironments', parameters('containerAppsEnvName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.App/containerApps",
+              "apiVersion": "2023-05-01",
+              "name": "[format('ca-worker-{0}', parameters('environment'))]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "identity": {
+                "type": "UserAssigned",
+                "userAssignedIdentities": {
+                  "[format('{0}', parameters('workerManagedIdentityId'))]": {}
+                }
+              },
+              "properties": {
+                "managedEnvironmentId": "[resourceId('Microsoft.App/managedEnvironments', parameters('containerAppsEnvName'))]",
+                "configuration": {
+                  "secrets": [
+                    {
+                      "name": "fsp-subscription-key",
+                      "keyVaultUrl": "[format('{0}secrets/fsp-subscription-key', parameters('keyVaultUri'))]",
+                      "identity": "[parameters('workerManagedIdentityId')]"
+                    },
+                    {
+                      "name": "anthropic-api-key",
+                      "keyVaultUrl": "[format('{0}secrets/anthropic-api-key', parameters('keyVaultUri'))]",
+                      "identity": "[parameters('workerManagedIdentityId')]"
+                    },
+                    {
+                      "name": "database-url",
+                      "keyVaultUrl": "[format('{0}secrets/database-url', parameters('keyVaultUri'))]",
+                      "identity": "[parameters('workerManagedIdentityId')]"
+                    },
+                    {
+                      "name": "service-bus-connection-string",
+                      "keyVaultUrl": "[format('{0}secrets/service-bus-connection-string', parameters('keyVaultUri'))]",
+                      "identity": "[parameters('workerManagedIdentityId')]"
+                    }
+                  ],
+                  "activeRevisionsMode": "Single"
+                },
+                "template": {
+                  "containers": [
+                    {
+                      "name": "worker",
+                      "image": "[variables('placeholderImage')]",
+                      "resources": {
+                        "cpu": "[json('0.5')]",
+                        "memory": "1Gi"
+                      },
+                      "env": [
+                        {
+                          "name": "NODE_ENV",
+                          "value": "production"
+                        },
+                        {
+                          "name": "PORT",
+                          "value": "3001"
+                        },
+                        {
+                          "name": "FSP_API_BASE_URL",
+                          "value": "[parameters('fspApiBaseUrl')]"
+                        },
+                        {
+                          "name": "FSP_CORE_BASE_URL",
+                          "value": "[parameters('fspCoreBaseUrl')]"
+                        },
+                        {
+                          "name": "FSP_CURRICULUM_BASE_URL",
+                          "value": "[parameters('fspCurriculumBaseUrl')]"
+                        },
+                        {
+                          "name": "FSP_ENVIRONMENT",
+                          "value": "[parameters('fspEnvironment')]"
+                        },
+                        {
+                          "name": "AZURE_SERVICE_BUS_POLL_QUEUE",
+                          "value": "poll-jobs"
+                        },
+                        {
+                          "name": "AZURE_SERVICE_BUS_CHANGE_EVENTS_QUEUE",
+                          "value": "change-events"
+                        },
+                        {
+                          "name": "AZURE_SERVICE_BUS_SUGGESTION_RESULTS_QUEUE",
+                          "value": "suggestion-results"
+                        },
+                        {
+                          "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+                          "value": "[parameters('appInsightsConnectionString')]"
+                        },
+                        {
+                          "name": "FSP_SUBSCRIPTION_KEY",
+                          "secretRef": "fsp-subscription-key"
+                        },
+                        {
+                          "name": "ANTHROPIC_API_KEY",
+                          "secretRef": "anthropic-api-key"
+                        },
+                        {
+                          "name": "DATABASE_URL",
+                          "secretRef": "database-url"
+                        },
+                        {
+                          "name": "AZURE_SERVICE_BUS_CONNECTION_STRING",
+                          "secretRef": "service-bus-connection-string"
+                        }
+                      ]
+                    }
+                  ],
+                  "scale": {
+                    "minReplicas": 1,
+                    "maxReplicas": 10,
+                    "rules": [
+                      {
+                        "name": "cpu-scaling",
+                        "custom": {
+                          "type": "cpu",
+                          "metadata": {
+                            "type": "Utilization",
+                            "value": "70"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.App/managedEnvironments', parameters('containerAppsEnvName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.App/containerApps",
+              "apiVersion": "2023-05-01",
+              "name": "[format('ca-web-{0}', parameters('environment'))]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "identity": {
+                "type": "UserAssigned",
+                "userAssignedIdentities": {
+                  "[format('{0}', parameters('webManagedIdentityId'))]": {}
+                }
+              },
+              "properties": {
+                "managedEnvironmentId": "[resourceId('Microsoft.App/managedEnvironments', parameters('containerAppsEnvName'))]",
+                "configuration": {
+                  "secrets": [
+                    {
+                      "name": "nextauth-secret",
+                      "keyVaultUrl": "[format('{0}secrets/fsp-subscription-key', parameters('keyVaultUri'))]",
+                      "identity": "[parameters('webManagedIdentityId')]"
+                    }
+                  ],
+                  "ingress": {
+                    "external": true,
+                    "targetPort": 3000,
+                    "transport": "auto",
+                    "allowInsecure": false
+                  },
+                  "activeRevisionsMode": "Single"
+                },
+                "template": {
+                  "containers": [
+                    {
+                      "name": "web",
+                      "image": "[variables('placeholderImage')]",
+                      "resources": {
+                        "cpu": "[json('0.5')]",
+                        "memory": "1Gi"
+                      },
+                      "env": [
+                        {
+                          "name": "NODE_ENV",
+                          "value": "production"
+                        },
+                        {
+                          "name": "PORT",
+                          "value": "3000"
+                        },
+                        {
+                          "name": "NEXT_PUBLIC_API_URL",
+                          "value": "[format('https://{0}', reference(resourceId('Microsoft.App/containerApps', format('ca-api-{0}', parameters('environment'))), '2023-05-01').configuration.ingress.fqdn)]"
+                        },
+                        {
+                          "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+                          "value": "[parameters('appInsightsConnectionString')]"
+                        }
+                      ]
+                    }
+                  ],
+                  "scale": {
+                    "minReplicas": 1,
+                    "maxReplicas": 10,
+                    "rules": [
+                      {
+                        "name": "cpu-scaling",
+                        "custom": {
+                          "type": "cpu",
+                          "metadata": {
+                            "type": "Utilization",
+                            "value": "70"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.App/containerApps', format('ca-api-{0}', parameters('environment')))]",
+                "[resourceId('Microsoft.App/managedEnvironments', parameters('containerAppsEnvName'))]"
+              ]
+            }
+          ],
+          "outputs": {
+            "containerAppsEnvId": {
+              "type": "string",
+              "metadata": {
+                "description": "Container Apps environment resource ID."
+              },
+              "value": "[resourceId('Microsoft.App/managedEnvironments', parameters('containerAppsEnvName'))]"
+            },
+            "apiFqdn": {
+              "type": "string",
+              "metadata": {
+                "description": "API Container App FQDN."
+              },
+              "value": "[reference(resourceId('Microsoft.App/containerApps', format('ca-api-{0}', parameters('environment'))), '2023-05-01').configuration.ingress.fqdn]"
+            },
+            "webFqdn": {
+              "type": "string",
+              "metadata": {
+                "description": "Web Container App FQDN."
+              },
+              "value": "[reference(resourceId('Microsoft.App/containerApps', format('ca-web-{0}', parameters('environment'))), '2023-05-01').configuration.ingress.fqdn]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "apiKvRoleAssignment",
+        "apiManagedIdentity",
+        "appInsights",
+        "keyVault",
+        "serviceBus",
+        "webKvRoleAssignment",
+        "webManagedIdentity",
+        "workerKvRoleAssignment",
+        "workerManagedIdentity"
+      ]
+    }
+  },
+  "outputs": {
+    "keyVaultName": {
+      "type": "string",
+      "metadata": {
+        "description": "Key Vault name for post-deployment verification."
+      },
+      "value": "[variables('keyVaultName')]"
+    },
+    "serviceBusNamespaceName": {
+      "type": "string",
+      "metadata": {
+        "description": "Service Bus namespace name."
+      },
+      "value": "[variables('serviceBusNamespaceName')]"
+    },
+    "postgresServerFqdn": {
+      "type": "string",
+      "metadata": {
+        "description": "PostgreSQL server FQDN."
+      },
+      "value": "[reference('postgresql').outputs.serverFqdn.value]"
+    },
+    "containerAppsEnvName": {
+      "type": "string",
+      "metadata": {
+        "description": "Container Apps environment name."
+      },
+      "value": "[variables('containerAppsEnvName')]"
+    },
+    "apiFqdn": {
+      "type": "string",
+      "metadata": {
+        "description": "API Container App public FQDN."
+      },
+      "value": "[reference('containerApps').outputs.apiFqdn.value]"
+    },
+    "webFqdn": {
+      "type": "string",
+      "metadata": {
+        "description": "Web Container App public FQDN."
+      },
+      "value": "[reference('containerApps').outputs.webFqdn.value]"
+    },
+    "appInsightsConnectionString": {
+      "type": "string",
+      "metadata": {
+        "description": "Application Insights connection string (non-secret — instrumentation key is not a credential)."
+      },
+      "value": "[reference('appInsights').outputs.appInsightsConnectionString.value]"
+    }
+  }
+}
