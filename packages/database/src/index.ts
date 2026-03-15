@@ -16,7 +16,7 @@
  */
 
 /** Package identifier — used in bootstrap tests. */
-export const PACKAGE_NAME = '@fsp-scheduler/database' as const;
+export const PACKAGE_NAME = '@fsp-scheduler/database';
 
 // PrismaClient singleton and generated types are added in PR-5.
 // The Prisma schema (prisma/schema.prisma) defining all five entities

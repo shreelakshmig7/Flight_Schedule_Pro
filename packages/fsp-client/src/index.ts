@@ -15,7 +15,7 @@
  */
 
 /** Package identifier — used in bootstrap tests. */
-export const PACKAGE_NAME = '@fsp-scheduler/fsp-client' as const;
+export const PACKAGE_NAME = '@fsp-scheduler/fsp-client';
 
 // Service classes are added in PR-6:
 // AuthService, OperatorsService, LocationsService, AircraftService,

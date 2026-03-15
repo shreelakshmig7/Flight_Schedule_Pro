@@ -16,7 +16,7 @@
  */
 
 /** Package identifier — used in bootstrap tests. */
-export const PACKAGE_NAME = '@fsp-scheduler/shared-types' as const;
+export const PACKAGE_NAME = '@fsp-scheduler/shared-types';
 
 // Type and constant modules are added in subsequent PRs:
 // PR-4: Service Bus message types (PollJobMessage, ChangeEventMessage, SuggestionResultMessage)
