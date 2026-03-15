@@ -1,12 +1,139 @@
-// Prisma schema for FSP Agentic Scheduler
-// Full entities (operators, suggestions, audit_log, discovery_prospects, communications) added in PR-5.
-// This minimal schema allows db:generate and db:migrate to run from repo root.
+// schema.prisma
+// -------------
+// Agentic Scheduler — FSP Integration — Prisma database schema
+// ------------------------------------------------------------
+// Defines all five entities for the Flight Schedule Pro database:
+// operators, suggestions, audit_log, discovery_prospects, and communications.
+// All queries must include operatorId for tenant isolation.
+//
+// PR: PR-5 — Prisma Schema and Database Migrations
 
 generator client {
   provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+// ────────────────────────────────────────────────────
+// Operator — one row per FSP operator (tenant)
+// ────────────────────────────────────────────────────
+model Operator {
+  id            String    @id @default(cuid())
+  /// FSP operator identifier string — used for tenant isolation in every query
+  operatorId    String    @unique
+  /// Numeric FSP operator ID used in API calls
+  fspOperatorId Int       @unique
+  name          String
+  /// Polling frequency tier: TIER1 | TIER2 | TIER3
+  pollingTier   String
+  isActive      Boolean   @default(true)
+  lastPolledAt  DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  suggestions Suggestion[]
+  auditLogs   AuditLog[]
+
+  @@index([operatorId])
+  @@map("operators")
+}
+
+// ────────────────────────────────────────────────────
+// Suggestion — one row per generated scheduler suggestion
+// ────────────────────────────────────────────────────
+model Suggestion {
+  id            String   @id @default(cuid())
+  /// FK → Operator.operatorId (string key, not cuid)
+  operatorId    String
+  fspOperatorId Int
+  /// Use-case type: CANCELLATION_FILL | NEW_OPENING | WAITLIST_FILL
+  useCaseType   String
+  /// Lifecycle status: PENDING | CREATED | SENT | ACCEPTED | REJECTED | FAILED
+  status        String
+  reservationId  String?
+  changeEventId  String?
+  llmPrompt     String?  @db.Text
+  llmResponse   String?  @db.Text
+  llmModel      String?
+  llmTokensUsed Int?
+  errorMessage  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  operator  Operator   @relation(fields: [operatorId], references: [operatorId])
+  auditLogs AuditLog[]
+
+  @@index([operatorId, status])
+  @@index([operatorId, useCaseType])
+  @@map("suggestions")
+}
+
+// ────────────────────────────────────────────────────
+// AuditLog — immutable event trail for all service actions
+// ────────────────────────────────────────────────────
+model AuditLog {
+  id            String   @id @default(cuid())
+  operatorId    String
+  correlationId String
+  service       String
+  action        String
+  entityType    String
+  entityId      String?
+  metadata      Json?
+  createdAt     DateTime @default(now())
+
+  operator   Operator    @relation(fields: [operatorId], references: [operatorId])
+  suggestion Suggestion? @relation(fields: [entityId], references: [id])
+
+  @@index([operatorId, createdAt])
+  @@index([correlationId])
+  @@map("audit_log")
+}
+
+// ────────────────────────────────────────────────────
+// DiscoveryProspect — FSP change events detected during polling
+// ────────────────────────────────────────────────────
+model DiscoveryProspect {
+  id            String    @id @default(cuid())
+  operatorId    String
+  fspOperatorId Int
+  reservationId String
+  changeType    String
+  detectedAt    DateTime
+  processedAt   DateTime?
+  /// Processing status: PENDING | PROCESSED | SKIPPED
+  status        String
+  rawDiff       Json
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([operatorId, status])
+  @@index([operatorId, detectedAt])
+  @@map("discovery_prospects")
+}
+
+// ────────────────────────────────────────────────────
+// Communication — outbound messages sent to guests/staff
+// ────────────────────────────────────────────────────
+model Communication {
+  id           String    @id @default(cuid())
+  operatorId   String
+  suggestionId String
+  /// Channel: EMAIL | SMS
+  channel      String
+  /// Obfuscated recipient identifier — no raw PII stored
+  recipient    String
+  /// Delivery status: PENDING | SENT | FAILED | BOUNCED
+  status       String
+  sentAt       DateTime?
+  errorMessage String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([operatorId, status])
+  @@map("communications")
 }

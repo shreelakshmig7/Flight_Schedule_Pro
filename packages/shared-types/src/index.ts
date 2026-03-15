@@ -19,8 +19,21 @@
 export const PACKAGE_NAME = '@fsp-scheduler/shared-types';
 
 // PR-4: Service Bus queue topology constants and message types
+// Note: `SuggestionStatus` and `PollingTier` are defined in both ./constants
+// (broader DB enums) and ./service-bus.types (narrower message types). We
+// re-export the DB versions from ./constants and the SB-specific types from
+// service-bus.types explicitly to avoid TS2308 ambiguity errors.
 export * from './constants';
-export * from './service-bus.types';
+export {
+  BaseMessage,
+  PollJobMessage,
+  ChangeEventMessage,
+  SuggestionResultMessage,
+  isPollJobMessage,
+  isChangeEventMessage,
+  isSuggestionResultMessage,
+  ChangeType,
+} from './service-bus.types';
 
 // Type and constant modules are added in subsequent PRs:
 // PR-5: Database entity types, enums (SuggestionStatus, UseCaseType, etc.)

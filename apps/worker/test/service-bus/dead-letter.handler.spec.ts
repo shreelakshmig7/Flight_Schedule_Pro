@@ -28,7 +28,11 @@ vi.mock('@azure/identity', () => ({
 // Helpers
 // ---------------------------------------------------------------------------
 
-function makeMockReceiver(messages: Array<{ body: unknown }>) {
+function makeMockReceiver(messages: Array<{ body: unknown }>): {
+  receiveMessages: ReturnType<typeof vi.fn>;
+  completeMessage: ReturnType<typeof vi.fn>;
+  close: ReturnType<typeof vi.fn>;
+} {
   return {
     receiveMessages: vi.fn().mockResolvedValue(messages),
     completeMessage: vi.fn().mockResolvedValue(undefined),
@@ -39,7 +43,10 @@ function makeMockReceiver(messages: Array<{ body: unknown }>) {
 type MockReceiver = ReturnType<typeof makeMockReceiver>;
 
 /** Build a fresh ServiceBusService stub with sequential DLQ receivers. */
-function makeServiceStub(receivers: [MockReceiver, MockReceiver, MockReceiver]) {
+function makeServiceStub(receivers: [MockReceiver, MockReceiver, MockReceiver]): {
+  createDeadLetterReceiver: ReturnType<typeof vi.fn>;
+  close: ReturnType<typeof vi.fn>;
+} {
   return {
     createDeadLetterReceiver: vi
       .fn()

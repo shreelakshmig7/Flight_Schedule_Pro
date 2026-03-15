@@ -23,7 +23,17 @@
       "Bash(node -e \":*)",
       "Bash(node -e \"require\\(''reflect-metadata''\\); const Reflect2 = global.Reflect; console.log\\(typeof Reflect2.defineMetadata, typeof Reflect2.getMetadata\\);\")",
       "Bash(git add:*)",
-      "Bash(git commit -m \"feat\\(PR-4\\): Azure Service Bus queue topology with typed messages, publishers, consumers, and dead-letter handler:*)"
+      "Bash(git commit -m \"feat\\(PR-4\\): Azure Service Bus queue topology with typed messages, publishers, consumers, and dead-letter handler:*)",
+      "Bash(git push:*)",
+      "Bash(DATABASE_URL=\"postgresql://dummy:dummy@localhost:5432/dummy\" npx prisma generate --schema prisma/schema.prisma)",
+      "Bash(npx vitest:*)",
+      "Bash(npx tsc:*)",
+      "Bash(DATABASE_URL=\"postgresql://dummy:dummy@localhost:5432/dummy\" npx vitest run --project apps/api)",
+      "Bash(DATABASE_URL=\"postgresql://dummy:dummy@localhost:5432/dummy\" npx turbo test --filter=@fsp-scheduler/api)",
+      "Bash(DATABASE_URL=\"postgresql://dummy:dummy@localhost:5432/dummy\" npx vitest run)",
+      "Bash(ls /Users/shreelakshmigopinatharao/Flight_Schedule_Pro/packages/database/.eslint*)",
+      "Bash(ls /Users/shreelakshmigopinatharao/Flight_Schedule_Pro/.eslint*)",
+      "Bash(git commit -m \"feat\\(PR-5\\): Prisma schema with 5 entities, DatabaseModule, PrismaService, and database constants:*)"
     ]
   }
 }

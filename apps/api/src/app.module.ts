@@ -12,13 +12,15 @@
  * Author: Agentic Scheduler Team
  * Project: Agentic Scheduler — FSP Integration
  * PR: PR-1 — Monorepo Setup
+ * Updated: PR-5 — Prisma Schema and Database Migrations (added DatabaseModule)
  */
 
 import { Module } from '@nestjs/common';
+import { DatabaseModule } from '@fsp-scheduler/database';
 import { HealthController } from './health/health.controller';
 
 @Module({
-  imports: [],
+  imports: [DatabaseModule],
   controllers: [HealthController],
   providers: [],
 })

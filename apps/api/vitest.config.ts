@@ -5,6 +5,12 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['test/**/*.spec.ts'],
+    // Provide a dummy DATABASE_URL so PrismaClient can be instantiated in tests
+    // without a real database. The PrismaService is overridden with a no-op mock
+    // in individual tests so $connect is never actually called.
+    env: {
+      DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov'],

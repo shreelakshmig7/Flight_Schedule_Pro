@@ -25,6 +25,7 @@ coverage/
 
 # Prisma
 packages/database/prisma/migrations/*.lock
+packages/database/src/generated/
 
 # Logs
 *.log

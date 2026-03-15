@@ -1,0 +1,71 @@
+PR-5: Prisma Schema and Database Migrations
+Test & Lint Results — 2026-03-15
+===============================================================
+
+── PRISMA GENERATE ────────────────────────────────────────────
+✔ Generated Prisma Client (v5.22.0) to ./src/generated/prisma in 38ms
+Output path: packages/database/src/generated/prisma
+
+── TEST RESULTS ───────────────────────────────────────────────
+All 9 turbo tasks successful (0 failed).
+
+packages/database (3 test files, 7 tests):
+  ✓ test/index.spec.ts           (2 tests)
+  ✓ test/prisma.service.spec.ts  (3 tests)
+  ✓ test/database.module.spec.ts (2 tests)
+
+packages/shared-types (2 test files, 16 tests):
+  ✓ test/index.spec.ts           (2 tests)
+  ✓ test/service-bus.types.spec.ts (14 tests)
+
+apps/api (1 test file, 1 test):
+  ✓ test/health.spec.ts          (1 test)
+
+apps/worker (6 test files, 17 tests):
+  ✓ test/app.spec.ts             (1 test)
+  ✓ test/service-bus/*.spec.ts   (16 tests)
+
+TOTAL: 9 test files, 41 tests — ALL PASSED
+
+── LINT RESULTS ───────────────────────────────────────────────
+All 6 turbo lint tasks successful (0 failed).
+
+  ✓ @fsp-scheduler/database
+  ✓ @fsp-scheduler/shared-types
+  ✓ @fsp-scheduler/api
+  ✓ @fsp-scheduler/worker
+  ✓ @fsp-scheduler/fsp-client
+  ✓ @fsp-scheduler/web
+
+── FILES CREATED/UPDATED ──────────────────────────────────────
+NEW:
+  packages/database/prisma/schema.prisma
+  packages/database/src/prisma.service.ts
+  packages/database/src/database.module.ts
+  packages/database/test/prisma.service.spec.ts
+  packages/database/test/database.module.spec.ts
+
+UPDATED:
+  packages/database/src/index.ts
+  packages/database/package.json
+  packages/shared-types/src/constants.ts
+  packages/shared-types/src/index.ts
+  apps/worker/src/app.module.ts
+  apps/api/src/app.module.ts
+  apps/api/vitest.config.ts
+  apps/api/test/health.spec.ts
+  apps/worker/test/service-bus/dead-letter.handler.spec.ts
+  .gitignore
+
+── ISSUES RESOLVED ────────────────────────────────────────────
+1. Shared-types index re-export conflict: SuggestionStatus and PollingTier
+   defined in both service-bus.types.ts and constants.ts. Fixed by switching
+   service-bus.types.ts exports to named exports in index.ts.
+2. health.spec.ts failed when DatabaseModule was added to AppModule because
+   PrismaClient requires DATABASE_URL at construction time. Fixed by:
+   a) Adding overrideProvider(PrismaService) in the test module
+   b) Adding env.DATABASE_URL = dummy value in apps/api/vitest.config.ts
+3. Worker dead-letter handler spec had missing return types on two helper
+   functions — fixed to satisfy @typescript-eslint/explicit-function-return-type.
+4. Database lint was scanning src/generated/ (308 errors). Fixed by adding
+   --ignore-pattern 'src/generated/**' to the lint script.
