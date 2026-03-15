@@ -179,3 +179,63 @@ export const FSP_MAX_RETRIES = 3;
  * Index 0 = first retry, index 1 = second retry, index 2 = third retry.
  */
 export const FSP_RETRY_BACKOFF_MS = [1000, 2000, 4000] as const;
+
+// ── Polling dispatcher constants ──────────────────────────────────────────────
+
+/**
+ * Polling interval in seconds for TIER1 operators.
+ * TIER1: operator has a reservation in the next 24 hours or a recent cancellation.
+ */
+export const TIER1_POLL_INTERVAL_SECONDS = 60;
+
+/**
+ * Polling interval in seconds for TIER2 operators.
+ * TIER2: operator has a reservation in the next 7 days.
+ */
+export const TIER2_POLL_INTERVAL_SECONDS = 300;
+
+/**
+ * Polling interval in seconds for TIER3 operators.
+ * TIER3: operator has no reservations in the next 7 days.
+ */
+export const TIER3_POLL_INTERVAL_SECONDS = 900;
+
+/**
+ * TTL in seconds for raw FSP poll snapshots stored in RawSnapshotStore.
+ * After this time, snapshots are evicted from the in-memory store.
+ */
+export const POLL_SNAPSHOT_TTL_SECONDS = 600;
+
+/**
+ * Hours ahead to look when determining if an operator qualifies for TIER1.
+ * If any reservation is scheduled within this window, the operator is TIER1.
+ */
+export const TIER1_RECENT_HOURS = 24;
+
+/**
+ * Days ahead to look when determining if an operator qualifies for TIER2.
+ * If any reservation is scheduled within this window (but not TIER1), the operator is TIER2.
+ */
+export const TIER2_LOOKAHEAD_DAYS = 7;
+
+/**
+ * Number of hours a recent cancellation keeps an operator in TIER1.
+ * If a cancellation was detected within this window, the operator stays at TIER1.
+ */
+export const TIER1_CANCELLATION_RECENCY_HOURS = 2;
+
+/**
+ * Token bucket refill interval in milliseconds (60 seconds).
+ */
+export const TOKEN_BUCKET_REFILL_INTERVAL_MS = 60_000;
+
+/**
+ * Minimum remaining token count that triggers a low-water-mark warning log.
+ */
+export const TOKEN_BUCKET_LOW_WATER_MARK = 10;
+
+/**
+ * Poll interval in milliseconds used by the token bucket acquire() loop
+ * while waiting for a token to become available or a pause to expire.
+ */
+export const TOKEN_BUCKET_POLL_INTERVAL_MS = 100;

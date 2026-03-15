@@ -15,6 +15,7 @@
  * Updated: PR-5 — Prisma Schema and Database Migrations (added DatabaseModule)
  * Updated: PR-7 — Authentication and Multi-Tenant Middleware (added WorkerAuthModule,
  *           FspClientModule)
+ * Updated: PR-8 — Rate-Limited Polling Dispatcher (added PollingModule)
  */
 
 import { Module } from '@nestjs/common';
@@ -23,6 +24,7 @@ import { DatabaseModule } from '@fsp-scheduler/database';
 import { FspClientModule } from '@fsp-scheduler/fsp-client';
 import { ServiceBusModule } from './service-bus/service-bus.module';
 import { WorkerAuthModule } from './auth/worker-auth.module';
+import { PollingModule } from './polling/polling.module';
 
 @Module({
   imports: [
@@ -31,6 +33,7 @@ import { WorkerAuthModule } from './auth/worker-auth.module';
     FspClientModule,
     ServiceBusModule,
     WorkerAuthModule,
+    PollingModule,
   ],
   controllers: [],
   providers: [],
