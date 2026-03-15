@@ -11,13 +11,18 @@
  *
  * Author: Agentic Scheduler Team
  * Project: Agentic Scheduler — FSP Integration
- * PR: PR-1 — Monorepo Setup
+ * PR: PR-4 — Azure Service Bus Queue Topology (added ServiceBusModule, ScheduleModule)
  */
 
 import { Module } from '@nestjs/common';
+import { ScheduleModule } from '@nestjs/schedule';
+import { ServiceBusModule } from './service-bus/service-bus.module';
 
 @Module({
-  imports: [],
+  imports: [
+    ScheduleModule.forRoot(),
+    ServiceBusModule,
+  ],
   controllers: [],
   providers: [],
 })

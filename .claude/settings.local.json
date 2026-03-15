@@ -12,7 +12,18 @@
       "Bash(npm install:*)",
       "Bash(npm run:*)",
       "Bash(az acr:*)",
-      "Bash(az provider:*)"
+      "Bash(az provider:*)",
+      "Bash(for f:*)",
+      "Bash(do echo:*)",
+      "Read(//Users/shreelakshmigopinatharao/Flight_Schedule_Pro/**)",
+      "Bash(done)",
+      "Bash(npx eslint:*)",
+      "Bash(npx turbo:*)",
+      "Bash(find /Users/shreelakshmigopinatharao/Flight_Schedule_Pro -type f -name *PR*4* -o -name *pr*4*)",
+      "Bash(node -e \":*)",
+      "Bash(node -e \"require\\(''reflect-metadata''\\); const Reflect2 = global.Reflect; console.log\\(typeof Reflect2.defineMetadata, typeof Reflect2.getMetadata\\);\")",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"feat\\(PR-4\\): Azure Service Bus queue topology with typed messages, publishers, consumers, and dead-letter handler:*)"
     ]
   }
 }

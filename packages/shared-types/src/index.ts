@@ -18,8 +18,11 @@
 /** Package identifier — used in bootstrap tests. */
 export const PACKAGE_NAME = '@fsp-scheduler/shared-types';
 
+// PR-4: Service Bus queue topology constants and message types
+export * from './constants';
+export * from './service-bus.types';
+
 // Type and constant modules are added in subsequent PRs:
-// PR-4: Service Bus message types (PollJobMessage, ChangeEventMessage, SuggestionResultMessage)
 // PR-5: Database entity types, enums (SuggestionStatus, UseCaseType, etc.)
 // PR-6: FSP API request/response types
 // PR-8+: Scheduling constants (polling tiers, rate limits, LLM config, etc.)
