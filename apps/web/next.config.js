@@ -2,6 +2,8 @@
 const nextConfig = {
   // App Router is the default in Next.js 14 — Pages Router is not used
   reactStrictMode: true,
+  // Required for Docker multi-stage build (copies standalone output to runner)
+  output: 'standalone',
   // Transpile shared workspace packages
   transpilePackages: ['@fsp-scheduler/shared-types'],
   // Security headers
