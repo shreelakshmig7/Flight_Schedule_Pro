@@ -5,7 +5,7 @@
     "rootDir": "src",
     "declaration": true,
     "paths": {
-      "@fsp-scheduler/shared-types": ["../shared-types/src"]
+      "@fsp-scheduler/shared-types": ["../shared-types/dist"]
     }
   },
   "include": ["src/**/*"],

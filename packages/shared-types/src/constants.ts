@@ -134,3 +134,34 @@ export const COMMUNICATION_STATUS = {
   FAILED: 'FAILED',
   BOUNCED: 'BOUNCED',
 } as const;
+
+// ── FSP API rate-limit and retry constants ────────────────────────────────────
+
+/**
+ * Maximum number of FSP API calls allowed per minute according to the
+ * subscription plan. Do not exceed this to avoid 429 responses.
+ */
+export const FSP_RATE_LIMIT_CALLS_PER_MINUTE = 60;
+
+/**
+ * Conservative per-minute call budget that stays safely below the hard cap.
+ * Proactive throttling keeps the system well clear of 429 territory.
+ */
+export const FSP_RATE_LIMIT_SAFE_CALLS_PER_MINUTE = 55;
+
+/**
+ * Pause duration in seconds applied after receiving a 429 response before
+ * retrying any FSP API calls.
+ */
+export const FSP_RATE_LIMIT_PAUSE_SECONDS = 60;
+
+/**
+ * Maximum number of retry attempts for a single FSP API call on 5xx errors.
+ */
+export const FSP_MAX_RETRIES = 3;
+
+/**
+ * Backoff delay in milliseconds between successive retry attempts.
+ * Index 0 = first retry, index 1 = second retry, index 2 = third retry.
+ */
+export const FSP_RETRY_BACKOFF_MS = [1000, 2000, 4000] as const;

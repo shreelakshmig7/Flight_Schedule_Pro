@@ -35,7 +35,5 @@ export {
   ChangeType,
 } from './service-bus.types';
 
-// Type and constant modules are added in subsequent PRs:
-// PR-5: Database entity types, enums (SuggestionStatus, UseCaseType, etc.)
 // PR-6: FSP API request/response types
-// PR-8+: Scheduling constants (polling tiers, rate limits, LLM config, etc.)
+export * from './fsp.types';

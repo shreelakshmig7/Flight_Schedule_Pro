@@ -42,6 +42,12 @@ jobs:
       - name: Generate Prisma client
         run: npm run generate -w packages/database
 
+      - name: Build workspace packages
+        run: |
+          npm run build -w packages/shared-types
+          npm run build -w packages/fsp-client
+          npm run build -w packages/database
+
       - name: Run lint
         run: npm run lint
 
