@@ -16,6 +16,7 @@
  * Updated: PR-7 — Authentication and Multi-Tenant Middleware (added WorkerAuthModule,
  *           FspClientModule)
  * Updated: PR-8 — Rate-Limited Polling Dispatcher (added PollingModule)
+ * Updated: PR-9 — Change Detection Engine (added ChangeDetectionModule)
  */
 
 import { Module } from '@nestjs/common';
@@ -25,6 +26,7 @@ import { FspClientModule } from '@fsp-scheduler/fsp-client';
 import { ServiceBusModule } from './service-bus/service-bus.module';
 import { WorkerAuthModule } from './auth/worker-auth.module';
 import { PollingModule } from './polling/polling.module';
+import { ChangeDetectionModule } from './change-detection/change-detection.module';
 
 @Module({
   imports: [
@@ -34,6 +36,7 @@ import { PollingModule } from './polling/polling.module';
     ServiceBusModule,
     WorkerAuthModule,
     PollingModule,
+    ChangeDetectionModule,
   ],
   controllers: [],
   providers: [],

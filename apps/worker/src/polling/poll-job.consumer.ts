@@ -9,7 +9,8 @@
  *   2. Sets the bearer token on the shared FSP HTTP client.
  *   3. Awaits a token from the TokenBucket before calling FSP.
  *   4. Calls ReservationsService.listReservations() against the FSP API.
- *   5. On success: stores the raw response in RawSnapshotStore.
+ *   5. On success: stores the raw response in RawSnapshotStore, then calls
+ *      ChangeDetectionService to detect and publish change events.
  *   6. On 429: pauses the token bucket for 60 s, re-enqueues the job,
  *      and completes the original message.
  *   7. On other errors: logs and completes the message (dead-lettered
@@ -20,6 +21,7 @@
  * Author: Agentic Scheduler Team
  * Project: Agentic Scheduler — FSP Integration
  * PR: PR-8 — Rate-Limited Polling Dispatcher
+ * Updated: PR-9 — Change Detection Engine (added ChangeDetectionService integration)
  */
 
 import {
@@ -46,6 +48,7 @@ import { PollJobPublisher } from '../service-bus/publishers/poll-job.publisher';
 import { TokenBucket } from './token-bucket';
 import { RawSnapshotStore } from './raw-snapshot.store';
 import { TokenStore } from '../auth/token-store';
+import { ChangeDetectionService } from '../change-detection/change-detection.service';
 import { randomUUID } from 'crypto';
 
 /** FSP error code for rate-limit responses. */
@@ -54,6 +57,9 @@ const FSP_RATE_LIMIT_CODE = '429';
 /**
  * Consumes PollJobMessages from the poll-jobs queue and executes FSP
  * reservation list calls within the token bucket budget.
+ *
+ * After every successful FSP poll, passes the previous and new reservation
+ * snapshots to ChangeDetectionService to detect and publish change events.
  */
 @Injectable()
 export class PollJobConsumer implements OnModuleInit, OnModuleDestroy {
@@ -61,12 +67,13 @@ export class PollJobConsumer implements OnModuleInit, OnModuleDestroy {
   private receiver: ServiceBusReceiver | null = null;
 
   /**
-   * @param tokenBucket         - Shared rate-limit token bucket.
-   * @param snapshotStore       - In-memory store for raw FSP poll results.
-   * @param reservationsService - FSP client service for reservation queries.
-   * @param coreClient          - Raw FSP HTTP client for per-call token injection.
-   * @param pollJobPublisher    - Publisher for re-enqueuing 429-failed jobs.
-   * @param tokenStore          - Per-operator FSP bearer token store.
+   * @param tokenBucket              - Shared rate-limit token bucket.
+   * @param snapshotStore            - In-memory store for raw FSP poll results.
+   * @param reservationsService      - FSP client service for reservation queries.
+   * @param coreClient               - Raw FSP HTTP client for per-call token injection.
+   * @param pollJobPublisher         - Publisher for re-enqueuing 429-failed jobs.
+   * @param tokenStore               - Per-operator FSP bearer token store.
+   * @param changeDetectionService   - Change detection orchestrator.
    */
   constructor(
     private readonly tokenBucket: TokenBucket,
@@ -75,6 +82,7 @@ export class PollJobConsumer implements OnModuleInit, OnModuleDestroy {
     @Inject(FSP_CORE_CLIENT) private readonly coreClient: FspHttpClient,
     private readonly pollJobPublisher: PollJobPublisher,
     private readonly tokenStore: TokenStore,
+    private readonly changeDetectionService: ChangeDetectionService,
   ) {}
 
   // ── Lifecycle ──────────────────────────────────────────────────────────────
@@ -125,7 +133,8 @@ export class PollJobConsumer implements OnModuleInit, OnModuleDestroy {
 
   /**
    * Processes a single PollJobMessage: sets bearer token, calls FSP,
-   * stores result or handles 429/errors.
+   * stores result or handles 429/errors. On success, passes the previous
+   * and new snapshots to ChangeDetectionService.
    *
    * @param message - The parsed PollJobMessage.
    */
@@ -155,7 +164,21 @@ export class PollJobConsumer implements OnModuleInit, OnModuleDestroy {
     // 4. Handle success
     if (result.success) {
       const reservations = result.data.reservations ?? [];
+
+      // Capture previous snapshot before overwriting
+      const previousReservations = this.snapshotStore.get(operatorId) ?? [];
+
+      // Update snapshot store with new data
       this.snapshotStore.set(operatorId, reservations);
+
+      // Run change detection (compare previous vs new snapshot)
+      await this.changeDetectionService.processSnapshot(
+        operatorId,
+        fspOperatorId,
+        previousReservations,
+        reservations,
+      );
+
       this.logger.debug(
         `Poll successful for operator ${operatorId} — ${reservations.length} reservations`,
       );

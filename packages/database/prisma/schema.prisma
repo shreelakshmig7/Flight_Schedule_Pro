@@ -32,6 +32,8 @@ model Operator {
   pollingTier   String
   isActive      Boolean   @default(true)
   lastPolledAt  DateTime?
+  /// SHA-256 hash of the last reservations response, used for change detection
+  lastPollHash  String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 

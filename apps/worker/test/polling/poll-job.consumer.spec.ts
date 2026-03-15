@@ -9,6 +9,7 @@
  * Author: Agentic Scheduler Team
  * Project: Agentic Scheduler — FSP Integration
  * PR: PR-8 — Rate-Limited Polling Dispatcher
+ * Updated: PR-9 — Change Detection Engine (added changeDetectionService mock)
  */
 
 import 'reflect-metadata';
@@ -48,6 +49,7 @@ describe('PollJobConsumer', () => {
   let coreClient: { setBearerToken: ReturnType<typeof vi.fn> };
   let pollJobPublisher: { publishPollJob: ReturnType<typeof vi.fn> };
   let tokenStore: { getToken: ReturnType<typeof vi.fn> };
+  let changeDetectionService: { processSnapshot: ReturnType<typeof vi.fn> };
   let service: PollJobConsumer;
 
   beforeEach(() => {
@@ -70,6 +72,10 @@ describe('PollJobConsumer', () => {
       getToken: vi.fn().mockReturnValue('bearer-token'),
     };
 
+    changeDetectionService = {
+      processSnapshot: vi.fn().mockResolvedValue(undefined),
+    };
+
     service = new PollJobConsumer(
       tokenBucket,
       snapshotStore,
@@ -77,6 +83,7 @@ describe('PollJobConsumer', () => {
       coreClient as never,
       pollJobPublisher as never,
       tokenStore as never,
+      changeDetectionService as never,
     );
   });
 
@@ -91,6 +98,49 @@ describe('PollJobConsumer', () => {
     await service.processMessage(message);
 
     expect(snapshotStore.get('op1')).toEqual(reservations);
+  });
+
+  it('calls changeDetectionService.processSnapshot with previous and new reservations on successful poll', async () => {
+    const reservations = [makeReservation('r1'), makeReservation('r2')];
+    reservationsService.listReservations.mockResolvedValue({
+      success: true,
+      data: { reservations },
+    });
+
+    const message = makePollJobMessage('op1', 1);
+    await service.processMessage(message);
+
+    expect(changeDetectionService.processSnapshot).toHaveBeenCalledWith(
+      'op1',
+      1,
+      [], // previous snapshot (empty — first poll)
+      reservations,
+    );
+  });
+
+  it('does NOT call changeDetectionService.processSnapshot when FSP returns 429', async () => {
+    reservationsService.listReservations.mockResolvedValue({
+      success: false,
+      error: 'Rate limit exceeded',
+      data: null,
+      fspErrors: [{ message: 'Too Many Requests', code: '429' }],
+    });
+
+    await service.processMessage(makePollJobMessage());
+
+    expect(changeDetectionService.processSnapshot).not.toHaveBeenCalled();
+  });
+
+  it('does NOT call changeDetectionService.processSnapshot on non-429 FSP errors', async () => {
+    reservationsService.listReservations.mockResolvedValue({
+      success: false,
+      error: 'Internal server error',
+      data: null,
+    });
+
+    await service.processMessage(makePollJobMessage());
+
+    expect(changeDetectionService.processSnapshot).not.toHaveBeenCalled();
   });
 
   it('calls FSP listReservations with the string fspOperatorId', async () => {

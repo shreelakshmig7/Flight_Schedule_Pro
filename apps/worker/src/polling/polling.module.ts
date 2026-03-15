@@ -19,6 +19,7 @@
  * Author: Agentic Scheduler Team
  * Project: Agentic Scheduler — FSP Integration
  * PR: PR-8 — Rate-Limited Polling Dispatcher
+ * Updated: PR-9 — Change Detection Engine (imports ChangeDetectionModule for PollJobConsumer)
  */
 
 import { Module } from '@nestjs/common';
@@ -28,6 +29,7 @@ import { PollingDispatcherService } from './polling-dispatcher.service';
 import { TierClassifierService } from './tier-classifier.service';
 import { PollJobConsumer } from './poll-job.consumer';
 import { ServiceBusModule } from '../service-bus/service-bus.module';
+import { ChangeDetectionModule } from '../change-detection/change-detection.module';
 
 /**
  * Feature module for the rate-limited polling dispatcher.
@@ -35,9 +37,12 @@ import { ServiceBusModule } from '../service-bus/service-bus.module';
  * All five polling providers are exported so that downstream modules
  * (change detection, suggestion engine) can inject RawSnapshotStore
  * and PollingDispatcherService directly.
+ *
+ * ChangeDetectionModule is imported so that PollJobConsumer can inject
+ * ChangeDetectionService after each successful FSP poll.
  */
 @Module({
-  imports: [ServiceBusModule],
+  imports: [ServiceBusModule, ChangeDetectionModule],
   providers: [
     TokenBucket,
     RawSnapshotStore,
