@@ -39,6 +39,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Generate Prisma client
+        run: npm run generate -w packages/database
+
       - name: Run lint
         run: npm run lint
 
@@ -58,6 +61,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Generate Prisma client
+        run: npm run generate -w packages/database
 
       - name: Build workspace packages
         run: |
@@ -84,6 +90,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Generate Prisma client
+        run: npm run generate -w packages/database
 
       - name: Build workspace packages
         run: |

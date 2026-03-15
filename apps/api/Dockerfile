@@ -29,6 +29,7 @@ COPY . .
 # Build workspace packages that api depends on, then build api itself
 RUN npm run build -w packages/shared-types
 RUN npm run build -w packages/fsp-client
+RUN npm run generate -w packages/database
 RUN npm run build -w packages/database
 RUN npm run build -w apps/api
 
