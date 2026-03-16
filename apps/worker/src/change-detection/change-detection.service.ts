@@ -33,15 +33,14 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
-import type { PrismaService } from '@fsp-scheduler/database';
-import { Prisma } from '@fsp-scheduler/database';
+import { Prisma, PrismaService } from '@fsp-scheduler/database';
 import {
   DISCOVERY_STATUS,
 } from '@fsp-scheduler/shared-types';
 import type { FspReservation, ChangeEventMessage } from '@fsp-scheduler/shared-types';
 import { ReservationDiffService } from './reservation-diff.service';
 import type { DetectedChange } from './reservation-diff.service';
-import type { ChangeEventPublisher } from '../service-bus/publishers/change-event.publisher';
+import { ChangeEventPublisher } from '../service-bus/publishers/change-event.publisher';
 
 /**
  * Orchestrates change detection for a single FSP operator poll result.

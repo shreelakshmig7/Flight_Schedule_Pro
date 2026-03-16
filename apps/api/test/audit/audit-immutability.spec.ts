@@ -171,7 +171,7 @@ describe('AuditService and AuditController', () => {
   });
 
   describe('GET /audit/:id', () => {
-    it('getAuditEntry returns entry for authenticated operator', () => {
+    it('getAuditEntry returns entry for authenticated operator', async () => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       vi.mocked(auditService.getAuditEntry).mockResolvedValue(mockAuditEntry);
 

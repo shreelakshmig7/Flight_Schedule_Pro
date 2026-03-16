@@ -44,8 +44,7 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
-import type { PrismaService } from '@fsp-scheduler/database';
-import { Prisma } from '@fsp-scheduler/database';
+import { Prisma, PrismaService } from '@fsp-scheduler/database';
 import type {
   ChangeEventMessage,
   FspEnrollmentProgress,
@@ -64,13 +63,15 @@ import {
   NEXT_LESSON_AUTO_SCHEDULE_THRESHOLD,
 } from '@fsp-scheduler/shared-types';
 import type { RationaleInput } from '@fsp-scheduler/shared-types';
-import type { EnrollmentService } from '@fsp-scheduler/fsp-client';
-import type { AvailabilityService } from '@fsp-scheduler/fsp-client';
-import type { FindATimeService } from '@fsp-scheduler/fsp-client';
-import type { AutoScheduleService } from '@fsp-scheduler/fsp-client';
-import type { CivilTwilightService } from '@fsp-scheduler/fsp-client';
-import type { ReservationsService } from '@fsp-scheduler/fsp-client';
-import type { RationaleGenerator } from '../../llm/rationale-generator';
+import {
+  EnrollmentService,
+  AvailabilityService,
+  FindATimeService,
+  AutoScheduleService,
+  CivilTwilightService,
+  ReservationsService,
+} from '@fsp-scheduler/fsp-client';
+import { RationaleGenerator } from '../../llm/rationale-generator';
 
 /** Milliseconds per day — used for date arithmetic. */
 const MS_PER_DAY = 24 * 60 * 60 * 1000;

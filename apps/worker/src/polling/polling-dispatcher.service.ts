@@ -26,7 +26,7 @@ import {
   OnModuleInit,
   OnModuleDestroy,
 } from '@nestjs/common';
-import type { PrismaService } from '@fsp-scheduler/database';
+import { PrismaService } from '@fsp-scheduler/database';
 import {
   TIER1_POLL_INTERVAL_SECONDS,
   TIER2_POLL_INTERVAL_SECONDS,

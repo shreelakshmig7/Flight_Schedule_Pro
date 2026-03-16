@@ -17,11 +17,47 @@
  * PR: PR-4 — Azure Service Bus Queue Topology (added SIGTERM handler)
  */
 
+import { createServer } from 'net';
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { Logger } from '@nestjs/common';
 import { AppModule } from './app.module';
+
+const WORKER_PORT_DEFAULT = 3001;
+const PORT_FALLBACK_RANGE = 10;
+/** Web app dev server port — worker must not use this when falling back. */
+const WEB_DEV_PORT = 3002;
+
+/**
+ * Returns the first port from the candidate list that is free to bind.
+ */
+function findAvailablePort(candidates: number[]): Promise<number> {
+  return new Promise((resolve, reject) => {
+    let index = 0;
+    function tryNext() {
+      if (index >= candidates.length) {
+        reject(new Error(`No available port among [${candidates.join(', ')}]`));
+        return;
+      }
+      const p = candidates[index];
+      index += 1;
+      const server = createServer();
+      server.once('error', (err: NodeJS.ErrnoException) => {
+        if (err.code === 'EADDRINUSE') {
+          tryNext();
+        } else {
+          reject(err);
+        }
+      });
+      server.once('listening', () => {
+        server.close(() => resolve(p));
+      });
+      server.listen(p, '0.0.0.0');
+    }
+    tryNext();
+  });
+}
 
 /**
  * Bootstraps the NestJS worker application and registers a SIGTERM handler
@@ -31,7 +67,21 @@ import { AppModule } from './app.module';
  */
 async function bootstrap(): Promise<void> {
   const logger = new Logger('WorkerBootstrap');
-  const port = parseInt(process.env['WORKER_PORT'] ?? '3001', 10);
+  const preferredPort = parseInt(process.env['WORKER_PORT'] ?? String(WORKER_PORT_DEFAULT), 10);
+  const candidates: number[] = [];
+  for (let i = 0; i < PORT_FALLBACK_RANGE; i++) {
+    const p = preferredPort + i;
+    if (p !== WEB_DEV_PORT) {
+      candidates.push(p);
+    }
+  }
+  const port = await findAvailablePort(candidates);
+
+  if (port !== preferredPort) {
+    logger.warn(
+      `Port ${preferredPort} was in use; worker will listen on port ${port}. Set WORKER_PORT to avoid fallback.`,
+    );
+  }
 
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,

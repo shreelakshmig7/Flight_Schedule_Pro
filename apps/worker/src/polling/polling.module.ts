@@ -30,6 +30,7 @@ import { TierClassifierService } from './tier-classifier.service';
 import { PollJobConsumer } from './poll-job.consumer';
 import { ServiceBusModule } from '../service-bus/service-bus.module';
 import { ChangeDetectionModule } from '../change-detection/change-detection.module';
+import { WorkerAuthModule } from '../auth/worker-auth.module';
 
 /**
  * Feature module for the rate-limited polling dispatcher.
@@ -39,10 +40,11 @@ import { ChangeDetectionModule } from '../change-detection/change-detection.modu
  * and PollingDispatcherService directly.
  *
  * ChangeDetectionModule is imported so that PollJobConsumer can inject
- * ChangeDetectionService after each successful FSP poll.
+ * ChangeDetectionService. WorkerAuthModule is imported so that
+ * PollJobConsumer can inject TokenStore.
  */
 @Module({
-  imports: [ServiceBusModule, ChangeDetectionModule],
+  imports: [ServiceBusModule, ChangeDetectionModule, WorkerAuthModule],
   providers: [
     TokenBucket,
     RawSnapshotStore,

@@ -29,10 +29,13 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import type { PrismaService } from '@fsp-scheduler/database';
+import { PrismaService } from '@fsp-scheduler/database';
 import { SUGGESTION_STATUS, USE_CASE_TYPE } from '@fsp-scheduler/shared-types';
-import type { SchedulableEventsService } from '@fsp-scheduler/fsp-client';
-import type { NextLessonUseCaseService, ScheduleNextLessonParams } from './next-lesson-use-case.service';
+import { SchedulableEventsService } from '@fsp-scheduler/fsp-client';
+import {
+  NextLessonUseCaseService,
+  type ScheduleNextLessonParams,
+} from './next-lesson-use-case.service';
 
 /**
  * Hourly scan service that proactively schedules next lessons for students

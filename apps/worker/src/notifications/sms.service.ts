@@ -19,7 +19,7 @@
  * PR: PR-18 — SMS Notifications
  */
 
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@fsp-scheduler/database';
 import { StudentsService } from '@fsp-scheduler/fsp-client';
 import {
@@ -32,6 +32,9 @@ import { PhoneUtils } from './phone-utils';
 
 /** Logger name for this service. */
 const SERVICE_NAME = 'SmsService';
+
+/** Injection token for the SMS provider (set in NotificationsModule). */
+export const SMS_PROVIDER_TOKEN = 'ISmsProvider';
 
 /** Maximum SMS body length per the PRD. */
 const SMS_MAX_LENGTH_CHARS = 160;
@@ -85,15 +88,10 @@ interface SuggestionRecord {
 export class SmsService {
   private readonly logger = new Logger(SERVICE_NAME);
 
-  /**
-   * @param prisma          - PrismaService for Communication and AuditLog writes.
-   * @param studentsService - FSP StudentsService for fetching student contact info.
-   * @param smsProvider     - The concrete ISmsProvider (injected via factory).
-   */
   constructor(
     private readonly prisma: PrismaService,
     private readonly studentsService: StudentsService,
-    private readonly smsProvider: ISmsProvider,
+    @Inject(SMS_PROVIDER_TOKEN) private readonly smsProvider: ISmsProvider,
   ) {}
 
   /**

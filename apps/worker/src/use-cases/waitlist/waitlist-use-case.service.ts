@@ -34,8 +34,7 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
-import type { PrismaService } from '@fsp-scheduler/database';
-import { Prisma } from '@fsp-scheduler/database';
+import { Prisma, PrismaService } from '@fsp-scheduler/database';
 import type {
   ChangeEventMessage,
   FspStudent,
@@ -56,13 +55,15 @@ import type {
   CandidateInput,
   RationaleInput,
 } from '@fsp-scheduler/shared-types';
-import type { StudentsService } from '@fsp-scheduler/fsp-client';
-import type { ReservationsService } from '@fsp-scheduler/fsp-client';
-import type { EnrollmentService } from '@fsp-scheduler/fsp-client';
-import type { AircraftService } from '@fsp-scheduler/fsp-client';
-import type { AvailabilityService } from '@fsp-scheduler/fsp-client';
-import type { RationaleGenerator } from '../../llm/rationale-generator';
-import type { PriorityWeightEngine } from '../../suggestions/priority-weight.engine';
+import {
+  StudentsService,
+  ReservationsService,
+  EnrollmentService,
+  AircraftService,
+  AvailabilityService,
+} from '@fsp-scheduler/fsp-client';
+import { RationaleGenerator } from '../../llm/rationale-generator';
+import { PriorityWeightEngine } from '../../suggestions/priority-weight.engine';
 
 /** Milliseconds per day — used for date range calculations. */
 const MS_PER_DAY = 24 * 60 * 60 * 1000;

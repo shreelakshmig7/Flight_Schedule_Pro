@@ -41,8 +41,8 @@ import type {
   ServiceResult,
   FspReservationListResponse,
 } from '@fsp-scheduler/shared-types';
-import type { ReservationsService, FspHttpClient } from '@fsp-scheduler/fsp-client';
-import { FSP_CORE_CLIENT } from '@fsp-scheduler/fsp-client';
+import { FSP_CORE_CLIENT, ReservationsService } from '@fsp-scheduler/fsp-client';
+import type { FspHttpClient } from '@fsp-scheduler/fsp-client';
 import { ServiceBusService } from '../service-bus/service-bus.service';
 import { PollJobPublisher } from '../service-bus/publishers/poll-job.publisher';
 import { TokenBucket } from './token-bucket';

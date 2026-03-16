@@ -16,17 +16,11 @@
  */
 
 import { Module } from '@nestjs/common';
-import { DatabaseModule, PrismaService } from '@fsp-scheduler/database';
-import { FspClientModule, StudentsService } from '@fsp-scheduler/fsp-client';
+import { DatabaseModule } from '@fsp-scheduler/database';
+import { FspClientModule } from '@fsp-scheduler/fsp-client';
 import { EmailService } from './email.service';
-import { SmsService } from './sms.service';
+import { SmsService, SMS_PROVIDER_TOKEN } from './sms.service';
 import { SmsProviderFactory } from './sms-provider.factory';
-import type { ISmsProvider } from './sms-provider.interface';
-
-/**
- * Custom provider token for ISmsProvider injection.
- */
-const SMS_PROVIDER_TOKEN = 'ISmsProvider';
 
 /**
  * NestJS module that provides the EmailService and SmsService to other
@@ -44,17 +38,7 @@ const SMS_PROVIDER_TOKEN = 'ISmsProvider';
         return SmsProviderFactory.create(providerName);
       },
     },
-    {
-      provide: SmsService,
-      useFactory: (prisma: unknown, studentsService: unknown, smsProvider: unknown) => {
-        return new SmsService(
-          prisma as PrismaService,
-          studentsService as StudentsService,
-          smsProvider as ISmsProvider,
-        );
-      },
-      inject: ['PrismaService', 'StudentsService', SMS_PROVIDER_TOKEN],
-    },
+    SmsService,
   ],
   exports: [EmailService, SmsService],
 })

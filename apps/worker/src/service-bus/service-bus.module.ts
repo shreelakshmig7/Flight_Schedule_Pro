@@ -15,7 +15,7 @@
  * PR: PR-4 — Azure Service Bus Queue Topology
  */
 
-import { Module } from '@nestjs/common';
+import { Module, Logger } from '@nestjs/common';
 import { SERVICE_BUS_NAMESPACE_ENV_KEY } from '@fsp-scheduler/shared-types';
 import { ServiceBusService } from './service-bus.service';
 import { PollJobPublisher } from './publishers/poll-job.publisher';
@@ -23,10 +23,18 @@ import { ChangeEventPublisher } from './publishers/change-event.publisher';
 import { SuggestionResultPublisher } from './publishers/suggestion-result.publisher';
 import { DeadLetterHandler } from './dead-letter.handler';
 
+/** Logger used by the factory provider before the module is fully initialised. */
+const factoryLogger = new Logger('ServiceBusModule');
+
 /**
  * Feature module that provides the Azure Service Bus infrastructure to the
  * worker application. Exports all providers so that other feature modules
  * can import ServiceBusModule and inject the publishers or service directly.
+ *
+ * When the AZURE_SERVICE_BUS_NAMESPACE env var is absent (typical in local
+ * development) the factory creates the service with a placeholder namespace.
+ * The real Azure SDK call will only fail if message publishing is actually
+ * attempted, which keeps the worker bootable for local dev/testing.
  */
 @Module({
   providers: [
@@ -35,9 +43,12 @@ import { DeadLetterHandler } from './dead-letter.handler';
       useFactory: (): ServiceBusService => {
         const namespace = process.env[SERVICE_BUS_NAMESPACE_ENV_KEY];
         if (!namespace) {
-          throw new Error(
-            `Missing required environment variable: ${SERVICE_BUS_NAMESPACE_ENV_KEY}`,
+          factoryLogger.warn(
+            `Environment variable ${SERVICE_BUS_NAMESPACE_ENV_KEY} is not set. ` +
+            'Service Bus operations will fail at runtime. ' +
+            'Set the variable to a valid namespace for production use.',
           );
+          return new ServiceBusService('local-dev-placeholder.servicebus.windows.net');
         }
         return new ServiceBusService(namespace);
       },
