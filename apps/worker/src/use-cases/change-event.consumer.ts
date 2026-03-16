@@ -55,10 +55,13 @@ import { NextLessonUseCaseService } from './next-lesson/next-lesson-use-case.ser
  * DISCOVERY_REQUEST → DiscoveryUseCaseService
  * STATUS_CHANGE     → NextLessonUseCaseService (newStatus=COMPLETED; others logged and discarded)
  */
+const SERVICE_BUS_ERROR_LOG_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes in dev to avoid spam when unreachable
+
 @Injectable()
 export class ChangeEventConsumer implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(ChangeEventConsumer.name);
   private receiver: ServiceBusReceiver | null = null;
+  private lastServiceBusErrorLog = 0;
 
   /**
    * @param serviceBusService          - Owns the Azure Service Bus client.
@@ -85,6 +88,21 @@ export class ChangeEventConsumer implements OnModuleInit, OnModuleDestroy {
       processMessage: (msg) => this.processMessage(msg),
       // eslint-disable-next-line @typescript-eslint/require-await
       processError: async (args) => {
+        const isDev = process.env['NODE_ENV'] !== 'production';
+        const now = Date.now();
+        if (
+          isDev &&
+          now - this.lastServiceBusErrorLog < SERVICE_BUS_ERROR_LOG_INTERVAL_MS
+        ) {
+          return;
+        }
+        if (isDev) {
+          this.lastServiceBusErrorLog = now;
+          this.logger.warn(
+            `Change-events receiver: ${args.error.message} (rate-limited in dev; set AZURE_SERVICE_BUS_CONNECTION_STRING when Service Bus is available)`,
+          );
+          return;
+        }
         this.logger.error(
           `Error from change-events receiver: ${args.error.message}`,
           { service: ChangeEventConsumer.name, errorSource: args.errorSource },

@@ -54,6 +54,9 @@ import { randomUUID } from 'crypto';
 /** FSP error code for rate-limit responses. */
 const FSP_RATE_LIMIT_CODE = '429';
 
+/** In dev, log Service Bus errors at most once per 5 minutes to avoid spam when unreachable. */
+const SERVICE_BUS_ERROR_LOG_INTERVAL_MS = 5 * 60 * 1000;
+
 /**
  * Consumes PollJobMessages from the poll-jobs queue and executes FSP
  * reservation list calls within the token bucket budget.
@@ -65,6 +68,7 @@ const FSP_RATE_LIMIT_CODE = '429';
 export class PollJobConsumer implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(PollJobConsumer.name);
   private receiver: ServiceBusReceiver | null = null;
+  private lastServiceBusErrorLog = 0;
 
   /**
    * @param tokenBucket              - Shared rate-limit token bucket.
@@ -121,6 +125,17 @@ export class PollJobConsumer implements OnModuleInit, OnModuleDestroy {
         await this.receiver!.completeMessage(sbMessage);
       },
       processError: (err) => {
+        const isDev = process.env['NODE_ENV'] !== 'production';
+        const now = Date.now();
+        if (
+          isDev &&
+          now - this.lastServiceBusErrorLog < SERVICE_BUS_ERROR_LOG_INTERVAL_MS
+        ) {
+          return Promise.resolve();
+        }
+        if (isDev) {
+          this.lastServiceBusErrorLog = now;
+        }
         this.logger.error(`Service Bus error on poll-jobs queue: ${String(err.error)}`);
         return Promise.resolve();
       },

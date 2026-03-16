@@ -39,6 +39,8 @@ import {
 import { ServiceBusService } from '../../service-bus/service-bus.service';
 import { WaitlistUseCaseService } from './waitlist-use-case.service';
 
+const SERVICE_BUS_ERROR_LOG_INTERVAL_MS = 5 * 60 * 1000;
+
 /**
  * Consumes messages from the change-events Service Bus queue and dispatches
  * them to the appropriate use-case handler.
@@ -51,6 +53,7 @@ import { WaitlistUseCaseService } from './waitlist-use-case.service';
 export class ChangeEventConsumer implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(ChangeEventConsumer.name);
   private receiver: ServiceBusReceiver | null = null;
+  private lastServiceBusErrorLog = 0;
 
   /**
    * @param serviceBusService     - Owns the Azure Service Bus client.
@@ -70,6 +73,17 @@ export class ChangeEventConsumer implements OnModuleInit, OnModuleDestroy {
       processMessage: (msg) => this.processMessage(msg),
       // eslint-disable-next-line @typescript-eslint/require-await
       processError: async (args) => {
+        const isDev = process.env['NODE_ENV'] !== 'production';
+        const now = Date.now();
+        if (
+          isDev &&
+          now - this.lastServiceBusErrorLog < SERVICE_BUS_ERROR_LOG_INTERVAL_MS
+        ) {
+          return;
+        }
+        if (isDev) {
+          this.lastServiceBusErrorLog = now;
+        }
         this.logger.error(
           `Error from change-events receiver: ${args.error.message}`,
           { service: ChangeEventConsumer.name, errorSource: args.errorSource },

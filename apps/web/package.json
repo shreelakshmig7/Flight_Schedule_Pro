@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "next build",
-    "dev": "next dev -p 3002",
+    "dev": "sh -c 'ulimit -n 10240 2>/dev/null; node scripts/dev-with-port.js'",
     "start": "next start -p 3002",
     "lint": "next lint",
     "test": "vitest run --passWithNoTests",

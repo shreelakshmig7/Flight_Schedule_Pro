@@ -25,9 +25,8 @@ import { Logger } from '@nestjs/common';
 import { AppModule } from './app.module';
 
 const WORKER_PORT_DEFAULT = 3001;
-const PORT_FALLBACK_RANGE = 10;
-/** Ports used by API (3000) and web (3002) in dev — worker must not use these when falling back. */
-const RESERVED_PORTS = new Set([3000, 3002]);
+/** Disjoint from API (3000, 3003–3009) and web (3002, 3017–3023) so parallel dev never collides. */
+const WORKER_PORT_CANDIDATES = [3001, 3010, 3011, 3012, 3013, 3014, 3015, 3016];
 
 /**
  * Returns the first port from the candidate list that is free to bind.
@@ -72,19 +71,11 @@ function findAvailablePort(candidates: number[]): Promise<number> {
  */
 async function bootstrap(): Promise<void> {
   const logger = new Logger('WorkerBootstrap');
-  const preferredPort = parseInt(process.env['WORKER_PORT'] ?? String(WORKER_PORT_DEFAULT), 10);
-  const candidates: number[] = [];
-  for (let i = 0; i < PORT_FALLBACK_RANGE; i++) {
-    const p = preferredPort + i;
-    if (!RESERVED_PORTS.has(p)) {
-      candidates.push(p);
-    }
-  }
-  const port = await findAvailablePort(candidates);
+  const port = await findAvailablePort(WORKER_PORT_CANDIDATES);
 
-  if (port !== preferredPort) {
+  if (port !== WORKER_PORT_CANDIDATES[0]) {
     logger.warn(
-      `Port ${preferredPort} was in use; worker will listen on port ${port}. Set WORKER_PORT to avoid fallback.`,
+      `Port ${WORKER_PORT_CANDIDATES[0]} was in use; worker will listen on port ${port}. Set WORKER_PORT to avoid fallback.`,
     );
   }
 
