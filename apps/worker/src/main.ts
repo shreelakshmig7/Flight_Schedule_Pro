@@ -35,7 +35,7 @@ const WEB_DEV_PORT = 3002;
 function findAvailablePort(candidates: number[]): Promise<number> {
   return new Promise((resolve, reject) => {
     let index = 0;
-    function tryNext() {
+    function tryNext(): void {
       if (index >= candidates.length) {
         reject(new Error(`No available port among [${candidates.join(', ')}]`));
         return;
