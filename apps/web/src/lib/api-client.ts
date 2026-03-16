@@ -43,7 +43,7 @@ async function fetchApi<T>(
   if (!response.ok) {
     const error = await response.text();
     const err = new Error(`API error ${response.status}: ${error}`);
-    (err as Record<string, unknown>)['status'] = response.status;
+    Object.assign(err, { status: response.status });
     throw err;
   }
 

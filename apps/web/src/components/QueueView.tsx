@@ -78,7 +78,7 @@ export function QueueView(): JSX.Element {
     } catch (err) {
       // Treat auth errors (401/403) as empty result — the API requires operator auth
       // but the dashboard shows an empty queue when no session is active.
-      const status = (err as Record<string, unknown>)?.['status'];
+      const status = err instanceof Error ? (err as Error & { status?: number }).status : undefined;
       if (status === 401 || status === 403) {
         setSuggestions([]);
         return;
