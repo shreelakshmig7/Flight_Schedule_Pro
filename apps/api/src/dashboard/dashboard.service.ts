@@ -281,13 +281,13 @@ export class DashboardService {
 
     try {
       // Current 7-day period
-      const currentPeriod = await this.prisma.suggestion.findMany({
+      const currentPeriod = (await this.prisma.suggestion.findMany({
         where: {
           operatorId: tenantContext.operatorId,
           status: { in: ['APPROVED', 'REJECTED'] },
           resolvedAt: { gte: sevenDaysAgo },
         },
-      });
+      })) ?? [];
 
       const currentApproved = currentPeriod.filter(
         (s) => s.status === 'APPROVED',
@@ -298,13 +298,13 @@ export class DashboardService {
           : 0;
 
       // Previous 7-day period (14-7 days ago)
-      const previousPeriod = await this.prisma.suggestion.findMany({
+      const previousPeriod = (await this.prisma.suggestion.findMany({
         where: {
           operatorId: tenantContext.operatorId,
           status: { in: ['APPROVED', 'REJECTED'] },
           resolvedAt: { gte: fourteenDaysAgo, lt: sevenDaysAgo },
         },
-      });
+      })) ?? [];
 
       const previousApproved = previousPeriod.filter(
         (s) => s.status === 'APPROVED',
@@ -522,13 +522,13 @@ export class DashboardService {
         dayEnd.setHours(23, 59, 59, 999);
 
         if (metricType === 'acceptanceRate') {
-          const dayData = await this.prisma.suggestion.findMany({
+          const dayData = (await this.prisma.suggestion.findMany({
             where: {
               operatorId: tenantContext.operatorId,
               status: { in: ['APPROVED', 'REJECTED'] },
               resolvedAt: { gte: dayStart, lte: dayEnd },
             },
-          });
+          })) ?? [];
 
           const approved = dayData.filter((s) => s.status === 'APPROVED').length;
           value = dayData.length > 0 ? (approved / dayData.length) * 100 : 0;
@@ -536,14 +536,14 @@ export class DashboardService {
           // Simplified: just use static value for trend
           value = Math.random() * 100;
         } else if (metricType === 'timeToFill') {
-          const dayData = await this.prisma.suggestion.findMany({
+          const dayData = (await this.prisma.suggestion.findMany({
             where: {
               operatorId: tenantContext.operatorId,
               status: 'APPROVED',
               resolvedAt: { gte: dayStart, lte: dayEnd },
             },
             select: { createdAt: true, resolvedAt: true },
-          });
+          })) ?? [];
 
           if (dayData.length > 0) {
             const totalSeconds = dayData.reduce((sum, s) => {
