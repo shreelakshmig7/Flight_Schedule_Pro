@@ -104,6 +104,7 @@ export function FilterBar({
           }}
         >
           <option value="">All</option>
+          <option value="RESCHEDULE">Reschedule</option>
           <option value="WAITLIST_FILL">Waitlist Fill</option>
           <option value="CANCELLATION_FILL">Cancellation Fill</option>
           <option value="NEW_OPENING">New Opening</option>

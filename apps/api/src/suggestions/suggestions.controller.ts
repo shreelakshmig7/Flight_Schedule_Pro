@@ -91,7 +91,7 @@ export class SuggestionsController {
       tenant = this.tenantContext.get();
     } catch {
       // No auth session — return demo suggestions so the UI renders data
-      return this.getDemoSuggestions(query['status']);
+      return this.getDemoSuggestions(query['status'], query['useCaseType']);
     }
 
     const rawLimit = query['limit'] ? parseInt(query['limit'], 10) : DEFAULT_LIST_LIMIT;
@@ -115,7 +115,7 @@ export class SuggestionsController {
    * Returns hardcoded demo suggestions for unauthenticated demo mode.
    * Used when no FSP bearer token is present so the UI has data to display.
    */
-  private getDemoSuggestions(statusFilter?: string): SuggestionListResult {
+  private getDemoSuggestions(statusFilter?: string, useCaseTypeFilter?: string): SuggestionListResult {
     const now = new Date().toISOString();
     const allSuggestions = [
       {
@@ -302,9 +302,13 @@ export class SuggestionsController {
       },
     ];
 
-    const filtered = statusFilter
+    let filtered = statusFilter
       ? allSuggestions.filter((s) => s.status === statusFilter)
       : allSuggestions;
+
+    if (useCaseTypeFilter) {
+      filtered = filtered.filter((s) => s.useCaseType === useCaseTypeFilter);
+    }
 
     return {
       items: filtered,

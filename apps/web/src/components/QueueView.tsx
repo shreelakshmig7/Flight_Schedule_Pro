@@ -58,15 +58,10 @@ export function QueueView(): JSX.Element {
 
       const params: FetchSuggestionsParams = { limit: 100 };
 
-      // Build status filter: if showHistory is true and status is ALL, fetch all statuses
-      if (showHistory) {
-        if (status !== 'ALL') {
-          params.status = status;
-        }
-        // else: omit status to get all statuses
-      } else {
-        // Default to PENDING when not showing history
-        params.status = 'PENDING';
+      // Pass the selected status filter to the API.
+      // When status is 'ALL' we omit the param so the API returns every status.
+      if (status !== 'ALL') {
+        params.status = status;
       }
 
       if (useCaseType) {
