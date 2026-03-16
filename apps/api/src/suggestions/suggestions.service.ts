@@ -440,4 +440,96 @@ export class SuggestionsService {
 
     return { items, hasNextPage, nextCursor };
   }
+
+  // ── bulkApproveSuggestions ────────────────────────────────────────────────
+
+  /**
+   * Approves multiple PENDING suggestions sequentially.
+   *
+   * Processes suggestions one by one to avoid rate limit exhaustion. If any
+   * suggestion fails FSP validation or is in an invalid state, it is skipped
+   * and the rest continue processing. Writes audit log entries for each success.
+   *
+   * @param tenant - Authenticated tenant context.
+   * @param suggestionIds - Array of suggestion IDs to approve.
+   * @returns Object with approved array and failed array (with reasons).
+   */
+  public async bulkApproveSuggestions(
+    tenant: TenantContextData,
+    suggestionIds: string[],
+  ): Promise<{ approved: unknown[]; failed: Array<{ id: string; reason: string }> }> {
+    const approved: unknown[] = [];
+    const failed: Array<{ id: string; reason: string }> = [];
+
+    this.logger.log(
+      `Bulk approving ${suggestionIds.length} suggestions for operatorId=${tenant.operatorId}`,
+    );
+
+    for (const suggestionId of suggestionIds) {
+      try {
+        const result = await this.approveSuggestion(tenant, suggestionId);
+        approved.push(result);
+      } catch (error) {
+        const reason = error instanceof Error ? error.message : 'Unknown error';
+        this.logger.warn(
+          `Bulk approve failed for suggestion ${suggestionId}: ${reason}`,
+        );
+        failed.push({ id: suggestionId, reason });
+        // Continue with next suggestion
+      }
+    }
+
+    this.logger.log(
+      `Bulk approve completed: ${approved.length} approved, ${failed.length} failed`,
+    );
+
+    return { approved, failed };
+  }
+
+  // ── bulkRejectSuggestions ─────────────────────────────────────────────────
+
+  /**
+   * Rejects multiple PENDING suggestions with the same reason.
+   *
+   * Processes suggestions sequentially. If any suggestion is in an invalid state
+   * or not found, it is skipped and processing continues with the rest.
+   * Writes audit log entries for each success.
+   *
+   * @param tenant - Authenticated tenant context.
+   * @param suggestionIds - Array of suggestion IDs to reject.
+   * @param reason - The rejection reason to apply to all selected suggestions.
+   * @returns Object with rejected array and failed array (with reasons).
+   */
+  public async bulkRejectSuggestions(
+    tenant: TenantContextData,
+    suggestionIds: string[],
+    reason: string,
+  ): Promise<{ rejected: unknown[]; failed: Array<{ id: string; reason: string }> }> {
+    const rejected: unknown[] = [];
+    const failed: Array<{ id: string; reason: string }> = [];
+
+    this.logger.log(
+      `Bulk rejecting ${suggestionIds.length} suggestions for operatorId=${tenant.operatorId}`,
+    );
+
+    for (const suggestionId of suggestionIds) {
+      try {
+        const result = await this.rejectSuggestion(tenant, suggestionId, reason);
+        rejected.push(result);
+      } catch (error) {
+        const errorReason = error instanceof Error ? error.message : 'Unknown error';
+        this.logger.warn(
+          `Bulk reject failed for suggestion ${suggestionId}: ${errorReason}`,
+        );
+        failed.push({ id: suggestionId, reason: errorReason });
+        // Continue with next suggestion
+      }
+    }
+
+    this.logger.log(
+      `Bulk reject completed: ${rejected.length} rejected, ${failed.length} failed`,
+    );
+
+    return { rejected, failed };
+  }
 }
