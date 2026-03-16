@@ -46,6 +46,7 @@ describe('FspAuthGuard', () => {
     };
   };
   let tenantContext: TenantContext;
+  let moduleRef: { resolve: ReturnType<typeof vi.fn> };
 
   const validOperator = {
     id: 'internal-uuid',
@@ -62,6 +63,11 @@ describe('FspAuthGuard', () => {
   beforeEach(() => {
     reflector = new Reflector();
     tenantContext = new TenantContext();
+
+    // Mock ModuleRef.resolve to return the TenantContext instance
+    moduleRef = {
+      resolve: vi.fn().mockResolvedValue(tenantContext),
+    };
 
     authClient = {
       setBearerToken: vi.fn(),
@@ -80,10 +86,10 @@ describe('FspAuthGuard', () => {
 
     guard = new FspAuthGuard(
       reflector,
+      moduleRef as never,
       operatorsService,
       authClient,
       prisma as never,
-      tenantContext,
     );
   });
 
@@ -228,6 +234,8 @@ describe('FspAuthGuard', () => {
 
     await guard.canActivate(ctx);
 
+    // TenantContext is now resolved lazily via ModuleRef.resolve()
+    expect(moduleRef.resolve).toHaveBeenCalled();
     const tenantData = tenantContext.get();
     expect(tenantData.operatorId).toBe(validOperator.operatorId);
     expect(tenantData.fspOperatorId).toBe(42);
