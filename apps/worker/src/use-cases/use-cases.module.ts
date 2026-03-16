@@ -8,26 +8,30 @@
  * use-case handler.
  *
  * Use-case routing:
- *   NEW_OPENING   → WaitlistUseCaseService   (PR-13)
- *   CANCELLATION  → RescheduleUseCaseService (PR-14)
- *   STATUS_CHANGE → logged and discarded     (future PR)
+ *   NEW_OPENING       → WaitlistUseCaseService   (PR-13)
+ *   CANCELLATION      → RescheduleUseCaseService (PR-14)
+ *   DISCOVERY_REQUEST → DiscoveryUseCaseService  (PR-15)
+ *   STATUS_CHANGE     → logged and discarded     (future PR)
  *
  * Imports:
  *   - ServiceBusModule  — provides ServiceBusService for the consumer
  *   - WaitlistModule    — provides WaitlistUseCaseService
  *   - RescheduleModule  — provides RescheduleUseCaseService
+ *   - DiscoveryModule   — provides DiscoveryUseCaseService
  *
  * Key exports: UseCasesModule
  *
  * Author: Agentic Scheduler Team
  * Project: Agentic Scheduler — FSP Integration
  * PR: PR-14 — Use Case B — Reschedule
+ * Updated: PR-15 — Use Case C — Discovery (added DiscoveryModule)
  */
 
 import { Module } from '@nestjs/common';
 import { ServiceBusModule } from '../service-bus/service-bus.module';
 import { WaitlistModule } from './waitlist/waitlist.module';
 import { RescheduleModule } from './reschedule/reschedule.module';
+import { DiscoveryModule } from './discovery/discovery.module';
 import { ChangeEventConsumer } from './change-event.consumer';
 
 /**
@@ -37,7 +41,7 @@ import { ChangeEventConsumer } from './change-event.consumer';
  * queue and routes events to the appropriate handler based on changeType.
  */
 @Module({
-  imports: [ServiceBusModule, WaitlistModule, RescheduleModule],
+  imports: [ServiceBusModule, WaitlistModule, RescheduleModule, DiscoveryModule],
   providers: [ChangeEventConsumer],
 })
 export class UseCasesModule {}

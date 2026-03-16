@@ -7,9 +7,10 @@
  * each received message to the appropriate use-case handler based on
  * the `changeType` field:
  *
- *   NEW_OPENING   → WaitlistUseCaseService.processNewOpening()
- *   CANCELLATION  → RescheduleUseCaseService.processCancellation()
- *   STATUS_CHANGE → (future use case — logged and discarded)
+ *   NEW_OPENING       → WaitlistUseCaseService.processNewOpening()
+ *   CANCELLATION      → RescheduleUseCaseService.processCancellation()
+ *   DISCOVERY_REQUEST → DiscoveryUseCaseService.processDiscoveryRequest()
+ *   STATUS_CHANGE     → (future use case — logged and discarded)
  *
  * Flow per message:
  *   1. Validate the message body as a ChangeEventMessage.
@@ -24,6 +25,7 @@
  * Project: Agentic Scheduler — FSP Integration
  * PR: PR-13 — Use Case A — Waitlist
  * Updated: PR-14 — Use Case B — Reschedule (added CANCELLATION routing)
+ * Updated: PR-15 — Use Case C — Discovery (added DISCOVERY_REQUEST routing)
  */
 
 import {
@@ -40,14 +42,16 @@ import {
 import { ServiceBusService } from '../service-bus/service-bus.service';
 import { WaitlistUseCaseService } from './waitlist/waitlist-use-case.service';
 import { RescheduleUseCaseService } from './reschedule/reschedule-use-case.service';
+import { DiscoveryUseCaseService } from './discovery/discovery-use-case.service';
 
 /**
  * Consumes messages from the change-events Service Bus queue and dispatches
  * them to the appropriate use-case handler.
  *
- * NEW_OPENING   → WaitlistUseCaseService
- * CANCELLATION  → RescheduleUseCaseService
- * STATUS_CHANGE → logged and discarded (future use case)
+ * NEW_OPENING       → WaitlistUseCaseService
+ * CANCELLATION      → RescheduleUseCaseService
+ * DISCOVERY_REQUEST → DiscoveryUseCaseService
+ * STATUS_CHANGE     → logged and discarded (future use case)
  */
 @Injectable()
 export class ChangeEventConsumer implements OnModuleInit, OnModuleDestroy {
@@ -58,11 +62,13 @@ export class ChangeEventConsumer implements OnModuleInit, OnModuleDestroy {
    * @param serviceBusService        - Owns the Azure Service Bus client.
    * @param waitlistUseCaseService   - Handler for NEW_OPENING events.
    * @param rescheduleUseCaseService - Handler for CANCELLATION events.
+   * @param discoveryUseCaseService  - Handler for DISCOVERY_REQUEST events.
    */
   constructor(
     private readonly serviceBusService: ServiceBusService,
     private readonly waitlistUseCaseService: WaitlistUseCaseService,
     private readonly rescheduleUseCaseService: RescheduleUseCaseService,
+    private readonly discoveryUseCaseService: DiscoveryUseCaseService,
   ) {}
 
   /** Subscribes to the change-events queue when the module initialises. */
@@ -131,6 +137,10 @@ export class ChangeEventConsumer implements OnModuleInit, OnModuleDestroy {
 
         case 'CANCELLATION':
           await this.rescheduleUseCaseService.processCancellation(body);
+          break;
+
+        case 'DISCOVERY_REQUEST':
+          await this.discoveryUseCaseService.processDiscoveryRequest(body);
           break;
 
         case 'STATUS_CHANGE':

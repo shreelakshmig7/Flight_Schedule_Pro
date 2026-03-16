@@ -59,7 +59,7 @@ export interface PollJobMessage extends BaseMessage {
 // ---------------------------------------------------------------------------
 
 /** Types of reservation changes that can be detected by the worker. */
-export type ChangeType = 'CANCELLATION' | 'NEW_OPENING' | 'STATUS_CHANGE';
+export type ChangeType = 'CANCELLATION' | 'NEW_OPENING' | 'STATUS_CHANGE' | 'DISCOVERY_REQUEST';
 
 /**
  * Message sent to the change-events queue when the poller detects a
@@ -158,6 +158,7 @@ const VALID_CHANGE_TYPES: ReadonlyArray<ChangeType> = [
   'CANCELLATION',
   'NEW_OPENING',
   'STATUS_CHANGE',
+  'DISCOVERY_REQUEST',
 ];
 
 /**

@@ -99,6 +99,7 @@ export const USE_CASE_TYPE = {
   CANCELLATION_FILL: 'CANCELLATION_FILL',
   NEW_OPENING: 'NEW_OPENING',
   WAITLIST_FILL: 'WAITLIST_FILL',
+  DISCOVERY: 'DISCOVERY',
 } as const;
 
 /** Union type derived from USE_CASE_TYPE values. */
@@ -378,6 +379,26 @@ export const RESCHEDULE_DEFAULT_POLICY_CONFIG = {
  * the CANCELLATION event rawDiff.
  */
 export const RESCHEDULE_DEFAULT_DURATION_MINUTES = 60;
+
+// ── Use Case C — Discovery constants ─────────────────────────────────────────
+
+/**
+ * Maximum number of PENDING suggestions to create per DISCOVERY_REQUEST event.
+ * Each suggestion represents a candidate discovery flight slot for the prospect.
+ */
+export const DISCOVERY_MAX_SUGGESTIONS = 3;
+
+/**
+ * Default number of calendar days ahead to search for discovery flight slots
+ * when the operator has not configured discoverySearchWindowDays in policyConfig.
+ */
+export const DISCOVERY_DEFAULT_SEARCH_WINDOW_DAYS = 14;
+
+/**
+ * Default duration in minutes for a discovery flight slot.
+ * Used when the operator has not configured a specific duration.
+ */
+export const DISCOVERY_DEFAULT_DURATION_MINUTES = 60;
 
 /**
  * Default priority weight configuration applied when an operator has not

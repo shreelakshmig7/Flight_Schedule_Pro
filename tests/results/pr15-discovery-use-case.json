@@ -1,0 +1,55 @@
+{
+  "pr": "PR-15",
+  "title": "Use Case C — Discovery",
+  "runDate": "2026-03-15",
+  "summary": {
+    "totalTestFiles": 20,
+    "totalTests": 249,
+    "passed": 249,
+    "failed": 0,
+    "newTests": 25,
+    "packages": {
+      "@fsp-scheduler/worker": {
+        "testFiles": 20,
+        "tests": 249,
+        "passed": 249,
+        "failed": 0,
+        "newFiles": ["test/use-cases/discovery-use-case.service.spec.ts"]
+      }
+    }
+  },
+  "evalCasesCovered": {
+    "fsp-006": {
+      "description": "3 preferred dates, all within civil twilight, eligible instructors/aircraft → 3 PENDING DISCOVERY suggestions created",
+      "status": "PASS"
+    },
+    "fsp-007": {
+      "description": "no preferred dates → search window used (discoverySearchWindowDays=14), FindATimeService called, suggestions created",
+      "status": "PASS"
+    },
+    "fsp-019": {
+      "description": "discoveryEligibleAircraftIds is empty → log 'no eligible aircraft' + 'no suggestions created', 0 suggestions, FindATimeService not called",
+      "status": "PASS"
+    },
+    "fsp-033": {
+      "description": "all slots fall outside civil twilight → log 'outside civil twilight', 0 suggestions, validateReservation not called",
+      "status": "PASS"
+    },
+    "fsp-034": {
+      "description": "slots returned with ineligible instructor → filtered out, only eligible instructor slots used for suggestions",
+      "status": "PASS"
+    }
+  },
+  "filesCreated": [
+    "apps/worker/src/use-cases/discovery/discovery-use-case.service.ts",
+    "apps/worker/src/use-cases/discovery/discovery.module.ts",
+    "apps/worker/test/use-cases/discovery-use-case.service.spec.ts",
+    "tests/results/pr15-discovery-use-case.json"
+  ],
+  "filesModified": [
+    "apps/worker/src/use-cases/use-cases.module.ts",
+    "apps/worker/src/use-cases/change-event.consumer.ts",
+    "packages/shared-types/src/constants.ts",
+    "packages/shared-types/src/service-bus.types.ts"
+  ]
+}
