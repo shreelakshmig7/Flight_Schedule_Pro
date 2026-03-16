@@ -3,24 +3,31 @@
  * -----------------------
  * Agentic Scheduler — FSP Integration — Operators REST controller
  * --------------------------------------------------------------
- * Handles operator bootstrap and configuration retrieval endpoints.
- * POST /operators/bootstrap is public (no auth required).
- * GET /operators/me requires a valid FSP bearer token.
+ * Handles operator bootstrap, configuration retrieval, and priority weight
+ * configuration endpoints.
+ *
+ * POST /operators/bootstrap              — public, no auth required
+ * GET  /operators/me                     — requires FSP bearer token
+ * GET  /operators/me/priority-weights    — requires FSP bearer token
+ * PUT  /operators/me/priority-weights    — requires FSP bearer token
  *
  * Key exports: OperatorsController
  *
  * Author: Agentic Scheduler Team
  * Project: Agentic Scheduler — FSP Integration
  * PR: PR-7 — Authentication and Multi-Tenant Middleware
+ * Updated: PR-11 — Priority Weight Engine (added priority-weights endpoints)
  */
 
-import { Body, Controller, Get, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Put } from '@nestjs/common';
 import { OperatorsService } from './operators.service';
 import { TenantContext } from '../auth/tenant-context';
 import { Public } from '../auth/public.decorator';
 import type {
   OperatorBootstrapRequest,
   OperatorConfigResponse,
+  PriorityWeightConfig,
+  UpdatePriorityWeightsRequest,
 } from '@fsp-scheduler/shared-types';
 
 /**
@@ -68,5 +75,37 @@ export class OperatorsController {
   public async getMyConfig(): Promise<OperatorConfigResponse> {
     const tenantData = this.tenantContext.get();
     return this.operatorsService.getMyConfig(tenantData);
+  }
+
+  /**
+   * Returns the priority weight configuration for the authenticated tenant.
+   *
+   * Returns DEFAULT_PRIORITY_WEIGHTS when the operator has not yet stored
+   * a custom configuration.
+   *
+   * @returns The current PriorityWeightConfig for this operator.
+   */
+  @Get('me/priority-weights')
+  public async getPriorityWeights(): Promise<PriorityWeightConfig> {
+    const tenantData = this.tenantContext.get();
+    return this.operatorsService.getPriorityWeights(tenantData);
+  }
+
+  /**
+   * Updates the priority weight configuration for the authenticated tenant.
+   *
+   * Performs a partial merge — only supplied fields are updated. Returns the
+   * full updated configuration. Responds with HTTP 400 if any numeric weight
+   * is negative.
+   *
+   * @param req - Partial weight update body.
+   * @returns The updated PriorityWeightConfig.
+   */
+  @Put('me/priority-weights')
+  public async updatePriorityWeights(
+    @Body() req: UpdatePriorityWeightsRequest,
+  ): Promise<PriorityWeightConfig> {
+    const tenantData = this.tenantContext.get();
+    return this.operatorsService.updatePriorityWeights(tenantData, req);
   }
 }

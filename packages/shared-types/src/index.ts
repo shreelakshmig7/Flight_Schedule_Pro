@@ -40,3 +40,9 @@ export * from './fsp.types';
 
 // PR-7: Operator and tenant context types
 export * from './operator.types';
+
+// PR-11: Priority Weight Engine types
+export * from './priority-weight.types';
+
+// PR-12: LLM Rationale Generator types
+export * from './llm.types';

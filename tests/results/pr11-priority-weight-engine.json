@@ -1,0 +1,59 @@
+{
+  "pr": "PR-11",
+  "title": "Priority Weight Engine",
+  "runDate": "2026-03-15",
+  "summary": {
+    "totalTestFiles": 23,
+    "totalTests": 191,
+    "passed": 191,
+    "failed": 0,
+    "packages": {
+      "@fsp-scheduler/worker": {
+        "testFiles": 16,
+        "tests": 145,
+        "passed": 145,
+        "failed": 0,
+        "newFiles": ["test/priority-weight.engine.spec.ts"]
+      },
+      "@fsp-scheduler/api": {
+        "testFiles": 7,
+        "tests": 46,
+        "passed": 46,
+        "failed": 0,
+        "newFiles": ["test/priority-weights.controller.spec.ts"]
+      }
+    }
+  },
+  "evalCasesCovered": {
+    "fsp-016": {
+      "description": "Brand new student with no flight history receives neutral score 0.5 and is NOT excluded",
+      "status": "PASS",
+      "coveredBy": "PriorityWeightEngine > timeSinceLastFlight signal > [fsp-016] brand new student..."
+    },
+    "fsp-017": {
+      "description": "Identical priority scores → deterministic tiebreaker by studentId (lower ID first)",
+      "status": "PASS",
+      "coveredBy": [
+        "PriorityWeightEngine > deterministic tiebreaker — fsp-017 > [fsp-017] when two candidates...",
+        "PriorityWeightEngine > deterministic tiebreaker — fsp-017 > [fsp-017] tiebreaker is deterministic...",
+        "PriorityWeightEngine > deterministic tiebreaker — fsp-017 > [fsp-017] result contains tiebreaker evidence..."
+      ]
+    }
+  },
+  "filesCreated": [
+    "packages/shared-types/src/priority-weight.types.ts",
+    "apps/worker/src/suggestions/priority-weight.engine.ts",
+    "apps/worker/src/suggestions/suggestions.module.ts",
+    "apps/worker/test/priority-weight.engine.spec.ts",
+    "apps/api/test/priority-weights.controller.spec.ts",
+    "packages/database/prisma/migrations/20260315000003_add_operator_priority_weights/migration.sql"
+  ],
+  "filesModified": [
+    "packages/shared-types/src/constants.ts",
+    "packages/shared-types/src/index.ts",
+    "packages/database/prisma/schema.prisma",
+    "apps/api/src/operators/operators.service.ts",
+    "apps/api/src/operators/operators.controller.ts",
+    "apps/worker/src/app.module.ts"
+  ]
+}

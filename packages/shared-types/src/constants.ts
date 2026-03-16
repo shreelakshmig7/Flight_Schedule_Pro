@@ -252,3 +252,121 @@ export const TOKEN_BUCKET_LOW_WATER_MARK = 10;
  * while waiting for a token to become available or a pause to expire.
  */
 export const TOKEN_BUCKET_POLL_INTERVAL_MS = 100;
+
+// ── Priority Weight Engine constants ─────────────────────────────────────────
+
+/**
+ * Maximum days used to normalise the timeSinceLastFlight signal.
+ * A student who has not flown for 90 or more days receives a score of 1.0.
+ * Students who have flown within the last 90 days receive a proportional score.
+ */
+export const TIME_SINCE_LAST_FLIGHT_CAP_DAYS = 90;
+
+/**
+ * Maximum days used to normalise the timeUntilNextScheduledFlight signal.
+ * A gap of 90 or more days until the next flight scores 1.0 (high priority).
+ */
+export const TIME_UNTIL_NEXT_FLIGHT_CAP_DAYS = 90;
+
+/**
+ * Neutral signal score assigned when a signal cannot be computed for a
+ * candidate (e.g. no flight history, missing enrollment progress).
+ * Using 0.5 ensures the student is neither boosted nor suppressed.
+ */
+export const PRIORITY_SIGNAL_NEUTRAL_SCORE = 0.5;
+
+// ── LLM Rationale Generator constants ────────────────────────────────────────
+
+/**
+ * Anthropic model used by the LLM Rationale Generator.
+ * Uses Claude Opus 4.6 for highest reasoning quality on scheduling decisions.
+ */
+export const LLM_ANTHROPIC_MODEL = 'claude-opus-4-6';
+
+/**
+ * Hard timeout in milliseconds for a single Anthropic API call.
+ * If the call has not resolved within this window, the fallback template
+ * is used and the suggestion is never blocked.
+ */
+export const LLM_TIMEOUT_MS = 10_000;
+
+/**
+ * Maximum tokens the LLM may generate for a rationale response.
+ * Kept low to control cost — the output is a small JSON object.
+ */
+export const LLM_MAX_TOKENS = 500;
+
+/**
+ * Minimum character length of a valid LLM-generated rationale string.
+ */
+export const LLM_RATIONALE_MIN_CHARS = 50;
+
+/**
+ * Maximum character length of a valid LLM-generated rationale string.
+ */
+export const LLM_RATIONALE_MAX_CHARS = 400;
+
+/**
+ * LLM confidence threshold above which the override rule may fire.
+ * If LLM confidence > this AND constraint pass rate < LLM_CONSTRAINT_PASS_RATE_THRESHOLD,
+ * LLM confidence is replaced with LLM_FALLBACK_CONFIDENCE.
+ */
+export const LLM_CONFIDENCE_OVERRIDE_THRESHOLD = 0.8;
+
+/**
+ * Constraint pass-rate threshold for the confidence override rule.
+ * Fewer than this fraction passing makes a high LLM confidence suspect.
+ */
+export const LLM_CONSTRAINT_PASS_RATE_THRESHOLD = 0.8;
+
+/**
+ * Deterministic confidence score assigned when LLM confidence is overridden
+ * or the fallback template is used. Neutral — neither inflates nor suppresses priority.
+ */
+export const LLM_FALLBACK_CONFIDENCE = 0.5;
+
+// ── Use Case A — Waitlist constants ───────────────────────────────────────────
+
+/**
+ * Maximum number of candidate students to attempt when filling a new opening.
+ * If all attempts fail constraints or FSP validation, no suggestion is created.
+ */
+export const WAITLIST_MAX_CANDIDATES_TO_TRY = 3;
+
+/**
+ * Hours after creation before a PENDING suggestion automatically expires.
+ * The expiry cron (PR-10) marks expired suggestions as EXPIRED.
+ */
+export const SUGGESTION_EXPIRY_HOURS = 24;
+
+/**
+ * Number of days of reservation history to fetch per candidate when
+ * computing priority signals.
+ */
+export const WAITLIST_RESERVATION_LOOKBACK_DAYS = 365;
+
+/**
+ * Number of days ahead to search when fetching future reservations per candidate.
+ */
+export const WAITLIST_RESERVATION_LOOKAHEAD_DAYS = 90;
+
+/**
+ * Default priority weight configuration applied when an operator has not
+ * stored a custom configuration. Weights are non-negative and will be
+ * normalised by the engine so they do not need to sum to 1.
+ */
+export const DEFAULT_PRIORITY_WEIGHTS = {
+  /** Weight for the timeSinceLastFlight signal. */
+  timeSinceLastFlight: 0.5,
+  /** Weight for the timeUntilNextScheduledFlight signal. */
+  timeUntilNextScheduledFlight: 0.3,
+  /** Weight for the totalFlightHours signal. */
+  totalFlightHours: 0.2,
+  /**
+   * Direction flag: false = fewer hours → higher score (student needs more
+   * training); true = more hours → higher score (closer to checkride).
+   */
+  flightHoursHigherIsBetter: false,
+  /** Operator-defined custom signal weights (signal key → weight). */
+  customSignals: {} as Record<string, number>,
+} as const;
