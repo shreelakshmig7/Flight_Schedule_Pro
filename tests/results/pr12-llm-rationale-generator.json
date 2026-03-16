@@ -1,0 +1,52 @@
+{
+  "pr": "PR-12",
+  "title": "LLM Rationale Generator",
+  "runDate": "2026-03-15",
+  "summary": {
+    "totalTestFiles": 17,
+    "totalTests": 165,
+    "passed": 165,
+    "failed": 0,
+    "newTests": 20,
+    "packages": {
+      "@fsp-scheduler/worker": {
+        "testFiles": 17,
+        "tests": 165,
+        "passed": 165,
+        "failed": 0,
+        "newFiles": ["test/llm/rationale-generator.spec.ts"]
+      }
+    }
+  },
+  "evalCasesCovered": {
+    "fsp-039": {
+      "description": "Anthropic API 500 error → fallback template, suggestion not blocked",
+      "status": "PASS"
+    },
+    "fsp-040": {
+      "description": "Malformed / missing-field JSON → schema validation fails → fallback",
+      "status": "PASS"
+    },
+    "fsp-041": {
+      "description": "LLM call exceeds 10s timeout → fallback within window (vi.useFakeTimers)",
+      "status": "PASS"
+    },
+    "fsp-042": {
+      "description": "LLM confidence 0.9 + 50% constraint pass rate → confidence overridden to 0.5",
+      "status": "PASS"
+    }
+  },
+  "modelUsed": "claude-opus-4-6",
+  "filesCreated": [
+    "packages/shared-types/src/llm.types.ts",
+    "apps/worker/src/llm/rationale-generator.ts",
+    "apps/worker/src/llm/llm.module.ts",
+    "apps/worker/test/llm/rationale-generator.spec.ts"
+  ],
+  "filesModified": [
+    "packages/shared-types/src/constants.ts",
+    "packages/shared-types/src/index.ts",
+    "apps/worker/package.json",
+    "apps/worker/src/app.module.ts"
+  ]
+}

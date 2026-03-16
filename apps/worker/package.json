@@ -11,6 +11,7 @@
     "lint": "eslint 'src/**/*.ts' 'test/**/*.ts'"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.56.0",
     "@azure/identity": "^4.4.1",
     "@azure/service-bus": "^7.9.5",
     "@fsp-scheduler/database": "*",
