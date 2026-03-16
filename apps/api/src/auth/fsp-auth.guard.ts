@@ -17,7 +17,7 @@
  */
 
 import { CanActivate, ExecutionContext, Injectable, Logger } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
+import { ContextIdFactory, ModuleRef, Reflector } from '@nestjs/core';
 import type { FastifyRequest } from 'fastify';
 import { OperatorsService } from '@fsp-scheduler/fsp-client';
 import { FspHttpClient } from '@fsp-scheduler/fsp-client';
@@ -55,17 +55,17 @@ export class FspAuthGuard implements CanActivate {
 
   /**
    * @param reflector        - NestJS reflector used to read @Public() metadata.
+   * @param moduleRef        - Used to lazily resolve request-scoped TenantContext.
    * @param operatorsService - FSP client service for permission checks.
    * @param authClient       - FSP HTTP client instance for injecting bearer token.
    * @param prisma           - Database service for operator lookup.
-   * @param tenantContext    - Request-scoped context populated on success.
    */
   constructor(
     private readonly reflector: Reflector,
+    private readonly moduleRef: ModuleRef,
     private readonly operatorsService: OperatorsService,
     @Inject(FSP_AUTH_CLIENT) private readonly authClient: FspHttpClient,
     private readonly prisma: PrismaService,
-    private readonly tenantContext: TenantContext,
   ) {}
 
   /**
@@ -171,8 +171,16 @@ export class FspAuthGuard implements CanActivate {
       return false;
     }
 
-    // Populate tenant context for downstream handlers
-    this.tenantContext.set({
+    // Lazily resolve the request-scoped TenantContext and populate it.
+    // We use ModuleRef instead of constructor injection because injecting
+    // a request-scoped provider into an APP_GUARD makes the guard
+    // request-scoped too, and NestJS throws 500 if DI resolution fails
+    // (e.g. context ID not found) — bypassing our try-catch in canActivate.
+    const contextId = ContextIdFactory.getByRequest(request);
+    const tenantContext = await this.moduleRef.resolve(TenantContext, contextId, {
+      strict: false,
+    });
+    tenantContext.set({
       operatorId: operator.operatorId,
       fspOperatorId: operator.fspOperatorId,
       userId,
