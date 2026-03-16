@@ -6,7 +6,8 @@
     "baseUrl": ".",
     "paths": {
       "@fsp-scheduler/shared-types": ["../../packages/shared-types/dist"],
-      "@fsp-scheduler/database": ["../../packages/database/dist"]
+      "@fsp-scheduler/database": ["../../packages/database/dist"],
+      "@fsp-scheduler/fsp-client": ["../../packages/fsp-client/dist"]
     }
   },
   "include": ["src/**/*"],

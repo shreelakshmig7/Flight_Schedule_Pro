@@ -33,7 +33,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { SuggestionsService } from '../../src/suggestions/suggestions.service';
-import { SUGGESTION_STATUS, QUEUE_NAMES } from '@fsp-scheduler/shared-types';
+import { SUGGESTION_STATUS } from '@fsp-scheduler/shared-types';
 import type {
   TenantContextData,
   SuggestionResultMessage,
@@ -62,7 +62,7 @@ function makeSuggestion(overrides: Partial<{
   operatorId: string;
   status: string;
   expiresAt: Date | null;
-}> = {}) {
+}> = {}): Record<string, unknown> {
   return {
     id: overrides.id ?? SUGGESTION_ID,
     operatorId: overrides.operatorId ?? OPERATOR_ID,
@@ -88,7 +88,7 @@ function makeSuggestion(overrides: Partial<{
 
 // ── Mock factories ────────────────────────────────────────────────────────────
 
-function makePrisma() {
+function makePrisma(): Record<string, unknown> {
   return {
     suggestion: {
       create: vi.fn(),
@@ -115,13 +115,13 @@ function makePrisma() {
   };
 }
 
-function makeFspReservationsService() {
+function makeFspReservationsService(): Record<string, unknown> {
   return {
     validateReservation: vi.fn(),
   };
 }
 
-function makeSuggestionResultPublisher() {
+function makeSuggestionResultPublisher(): Record<string, unknown> {
   return {
     publishSuggestionResult: vi.fn(),
   };

@@ -17,6 +17,7 @@
  * Project: Agentic Scheduler — FSP Integration
  * PR: PR-7 — Authentication and Multi-Tenant Middleware
  * Updated: PR-11 — Priority Weight Engine (added getPriorityWeights, updatePriorityWeights)
+ * Updated: PR-21 — Operator Configuration UI (added updatePolicy, updateNotificationConfig)
  */
 
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
@@ -31,6 +32,10 @@ import type {
   PriorityWeightConfig,
   TenantContextData,
   UpdatePriorityWeightsRequest,
+  SchedulingPolicyConfig,
+  NotificationConfig,
+  UpdatePolicyConfigRequest,
+  UpdateNotificationConfigRequest,
 } from '@fsp-scheduler/shared-types';
 
 /** Logger name for this service. */
@@ -250,6 +255,218 @@ export class OperatorsService {
         ? obj['customSignals'] as Record<string, number>
         : defaults.customSignals,
     };
+  }
+
+  /**
+   * Updates the scheduling policy configuration for the authenticated tenant.
+   *
+   * Performs a partial merge: only the fields present in `req` overwrite the
+   * existing configuration. Validates that rescheduleWindowDays > 0.
+   *
+   * @param tenantContext - Authenticated tenant data from TenantContext.
+   * @param req           - Partial update request body.
+   * @returns The new SchedulingPolicyConfig after the update.
+   * @throws BadRequestException if rescheduleWindowDays is defined but <= 0.
+   */
+  public async updatePolicy(
+    tenantContext: TenantContextData,
+    req: UpdatePolicyConfigRequest,
+  ): Promise<SchedulingPolicyConfig> {
+    this.logger.log(`Updating policy for operatorId=${tenantContext.operatorId}`);
+
+    // Validate rescheduleWindowDays if provided
+    if (typeof req.rescheduleWindowDays === 'number' && req.rescheduleWindowDays <= 0) {
+      throw new BadRequestException('rescheduleWindowDays must be greater than 0');
+    }
+
+    const operator = await this.prisma.operator.findUniqueOrThrow({
+      where: { operatorId: tenantContext.operatorId },
+      select: { policyConfig: true },
+    });
+
+    const current = operator.policyConfig
+      ? this.parsePolicyConfig(operator.policyConfig)
+      : this.buildDefaultPolicyConfig();
+
+    const updated: SchedulingPolicyConfig = {
+      rescheduleWindowDays: req.rescheduleWindowDays ?? current.rescheduleWindowDays,
+    };
+    // Use conditional assignment to satisfy exactOptionalPropertyTypes
+    const psi = req.preferSameInstructor ?? current.preferSameInstructor;
+    if (psi !== undefined) updated.preferSameInstructor = psi;
+
+    const pci = req.preferContinuityInstructor ?? current.preferContinuityInstructor;
+    if (pci !== undefined) updated.preferContinuityInstructor = pci;
+
+    const dswd = req.discoverySearchWindowDays ?? current.discoverySearchWindowDays;
+    if (dswd !== undefined) updated.discoverySearchWindowDays = dswd;
+
+    const deii = req.discoveryEligibleInstructorIds ?? current.discoveryEligibleInstructorIds;
+    if (deii !== undefined) updated.discoveryEligibleInstructorIds = deii;
+
+    const deai = req.discoveryEligibleAircraftIds ?? current.discoveryEligibleAircraftIds;
+    if (deai !== undefined) updated.discoveryEligibleAircraftIds = deai;
+
+    await this.prisma.operator.update({
+      where: { operatorId: tenantContext.operatorId },
+      data: { policyConfig: updated as object },
+    });
+
+    this.logger.log(`Policy updated for operatorId=${tenantContext.operatorId}`);
+    return updated;
+  }
+
+  /**
+   * Updates the notification configuration for the authenticated tenant.
+   *
+   * Validates that SMS templates do not exceed 160 characters. Performs a partial
+   * merge: only supplied sections are updated.
+   *
+   * @param tenantContext - Authenticated tenant data from TenantContext.
+   * @param req           - Partial notification config update body.
+   * @returns The new NotificationConfig after the update.
+   * @throws BadRequestException if any SMS template exceeds 160 characters.
+   */
+  public async updateNotificationConfig(
+    tenantContext: TenantContextData,
+    req: UpdateNotificationConfigRequest,
+  ): Promise<NotificationConfig> {
+    this.logger.log(`Updating notification config for operatorId=${tenantContext.operatorId}`);
+
+    // Validate SMS template character limits
+    if (req.smsTemplates) {
+      for (const [key, template] of Object.entries(req.smsTemplates)) {
+        if (template.body.length > 160) {
+          throw new BadRequestException(
+            `SMS template '${key}' exceeds 160 character limit: ${template.body.length} chars`,
+          );
+        }
+      }
+    }
+
+    const operator = await this.prisma.operator.findUniqueOrThrow({
+      where: { operatorId: tenantContext.operatorId },
+      select: { notificationConfig: true },
+    });
+
+    const current = operator.notificationConfig
+      ? this.parseNotificationConfig(operator.notificationConfig)
+      : this.buildDefaultNotificationConfig();
+
+    const updated: NotificationConfig = {
+      emailTemplates: {
+        ...current.emailTemplates,
+        ...(req.emailTemplates ?? {}),
+      },
+      smsTemplates: {
+        ...current.smsTemplates,
+        ...(req.smsTemplates ?? {}),
+      },
+    };
+
+    await this.prisma.operator.update({
+      where: { operatorId: tenantContext.operatorId },
+      data: { notificationConfig: updated as object },
+    });
+
+    this.logger.log(`Notification config updated for operatorId=${tenantContext.operatorId}`);
+    return updated;
+  }
+
+  /**
+   * Constructs a default SchedulingPolicyConfig.
+   */
+  private buildDefaultPolicyConfig(): SchedulingPolicyConfig {
+    return {
+      rescheduleWindowDays: 30,
+      preferSameInstructor: false,
+      preferContinuityInstructor: false,
+      discoverySearchWindowDays: 14,
+      discoveryEligibleInstructorIds: [],
+      discoveryEligibleAircraftIds: [],
+    };
+  }
+
+  /**
+   * Safely parses a raw JSON value from the database into a SchedulingPolicyConfig.
+   * Falls back to defaults for any missing fields.
+   *
+   * @param raw - Raw JSON value from Prisma (typed as Prisma.JsonValue).
+   */
+  private parsePolicyConfig(raw: unknown): SchedulingPolicyConfig {
+    const defaults = this.buildDefaultPolicyConfig();
+    if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
+      return defaults;
+    }
+    const obj = raw as Record<string, unknown>;
+    const result: SchedulingPolicyConfig = {
+      rescheduleWindowDays: typeof obj['rescheduleWindowDays'] === 'number'
+        ? obj['rescheduleWindowDays']
+        : defaults.rescheduleWindowDays,
+    };
+    const psi = typeof obj['preferSameInstructor'] === 'boolean'
+      ? obj['preferSameInstructor']
+      : defaults.preferSameInstructor;
+    if (psi !== undefined) result.preferSameInstructor = psi;
+
+    const pci = typeof obj['preferContinuityInstructor'] === 'boolean'
+      ? obj['preferContinuityInstructor']
+      : defaults.preferContinuityInstructor;
+    if (pci !== undefined) result.preferContinuityInstructor = pci;
+
+    const dsw = typeof obj['discoverySearchWindowDays'] === 'number'
+      ? obj['discoverySearchWindowDays']
+      : defaults.discoverySearchWindowDays;
+    if (dsw !== undefined) result.discoverySearchWindowDays = dsw;
+
+    const dei = Array.isArray(obj['discoveryEligibleInstructorIds'])
+      ? obj['discoveryEligibleInstructorIds'] as string[]
+      : defaults.discoveryEligibleInstructorIds;
+    if (dei !== undefined) result.discoveryEligibleInstructorIds = dei;
+
+    const dea = Array.isArray(obj['discoveryEligibleAircraftIds'])
+      ? obj['discoveryEligibleAircraftIds'] as string[]
+      : defaults.discoveryEligibleAircraftIds;
+    if (dea !== undefined) result.discoveryEligibleAircraftIds = dea;
+
+    return result;
+  }
+
+  /**
+   * Constructs a default NotificationConfig.
+   */
+  private buildDefaultNotificationConfig(): NotificationConfig {
+    return {
+      emailTemplates: {},
+      smsTemplates: {},
+    };
+  }
+
+  /**
+   * Safely parses a raw JSON value from the database into a NotificationConfig.
+   * Falls back to defaults for any missing fields.
+   *
+   * @param raw - Raw JSON value from Prisma (typed as Prisma.JsonValue).
+   */
+  private parseNotificationConfig(raw: unknown): NotificationConfig {
+    const defaults = this.buildDefaultNotificationConfig();
+    if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
+      return defaults;
+    }
+    const obj = raw as Record<string, unknown>;
+    const result: NotificationConfig = {};
+
+    const et = (typeof obj['emailTemplates'] === 'object' && obj['emailTemplates'] !== null && !Array.isArray(obj['emailTemplates']))
+      ? obj['emailTemplates'] as unknown as Record<string, import('@fsp-scheduler/shared-types').EmailTemplate>
+      : defaults.emailTemplates;
+    if (et !== undefined) result.emailTemplates = et;
+
+    const st = (typeof obj['smsTemplates'] === 'object' && obj['smsTemplates'] !== null && !Array.isArray(obj['smsTemplates']))
+      ? obj['smsTemplates'] as unknown as Record<string, import('@fsp-scheduler/shared-types').SmsTemplate>
+      : defaults.smsTemplates;
+    if (st !== undefined) result.smsTemplates = st;
+
+    return result;
   }
 
   /**

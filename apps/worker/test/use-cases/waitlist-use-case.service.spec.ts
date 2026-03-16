@@ -19,7 +19,7 @@
  */
 
 import 'reflect-metadata';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { WaitlistUseCaseService } from '../../src/use-cases/waitlist/waitlist-use-case.service';
 import type { ChangeEventMessage } from '@fsp-scheduler/shared-types';
 import {
@@ -60,7 +60,7 @@ const STUDENTS = [
 const NOW = new Date('2025-10-15T12:00:00Z');
 
 /** Reservations for a student who hasn't flown in 30 days (high priority). */
-function makeReservations30DaysAgo(studentId: string) {
+function makeReservations30DaysAgo(studentId: string): Record<string, unknown>[] {
   return [
     {
       reservationId: `res-${studentId}-1`,
@@ -72,29 +72,17 @@ function makeReservations30DaysAgo(studentId: string) {
   ];
 }
 
-/** Reservations for a student who hasn't flown in 38 days (highest priority). */
-function makeReservations38DaysAgo(studentId: string) {
-  return [
-    {
-      reservationId: `res-${studentId}-1`,
-      startDateTime: '2025-09-07T14:00:00Z',
-      endDateTime: '2025-09-07T16:00:00Z',
-      status: 'Confirmed',
-      studentId,
-    },
-  ];
-}
 
 /** Enrollment progress: 20 of 40 hours completed. */
 const ENROLLMENT_PROGRESS = { completedHours: 20, requiredHours: 40 };
 
 /** Enrollment record: one active enrollment. */
-function makeEnrollment(studentId: string) {
+function makeEnrollment(studentId: string): Record<string, unknown>[] {
   return [{ enrollmentId: `enroll-${studentId}`, studentId, status: 'active' }];
 }
 
 /** Build a mock Prisma service. */
-function makeMockPrisma() {
+function makeMockPrisma(): Record<string, unknown> {
   return {
     suggestion: {
       create: vi.fn().mockResolvedValue({
@@ -119,7 +107,7 @@ function makeMockPrisma() {
 }
 
 /** Build a mock StudentsService. */
-function makeMockStudents(students = STUDENTS) {
+function makeMockStudents(students = STUDENTS): Record<string, unknown> {
   return { listStudents: vi.fn().mockResolvedValue({ success: true, data: students }) };
 }
 
@@ -127,7 +115,7 @@ function makeMockStudents(students = STUDENTS) {
 function makeMockReservations(
   reservationsByStudent: Record<string, object[]> = {},
   validateSuccess = true,
-) {
+): Record<string, unknown> {
   return {
     getReservationsForPerson: vi.fn().mockImplementation(
       (_opId: string, studentId: string) => {
@@ -144,7 +132,7 @@ function makeMockReservations(
 }
 
 /** Build a mock EnrollmentService. */
-function makeMockEnrollment() {
+function makeMockEnrollment(): Record<string, unknown> {
   return {
     getEnrollments: vi.fn().mockImplementation((_opId: string, studentId: string) =>
       Promise.resolve({ success: true, data: makeEnrollment(studentId) }),
@@ -161,7 +149,7 @@ function makeMockEnrollment() {
 }
 
 /** Build a mock AircraftService with clean squawks (no open write-ups). */
-function makeMockAircraft(hasOpenSquawk = false) {
+function makeMockAircraft(hasOpenSquawk = false): Record<string, unknown> {
   return {
     getSquawks: vi.fn().mockResolvedValue({
       success: true,
@@ -173,7 +161,7 @@ function makeMockAircraft(hasOpenSquawk = false) {
 }
 
 /** Build a mock AvailabilityService where all students are available. */
-function makeMockAvailability(availableStudentIds: string[] | 'all' = 'all') {
+function makeMockAvailability(availableStudentIds: string[] | 'all' = 'all'): Record<string, unknown> {
   return {
     getBatchAvailability: vi.fn().mockImplementation(
       (_opId: string, req: { userIds: string[] }) => {
@@ -190,7 +178,7 @@ function makeMockAvailability(availableStudentIds: string[] | 'all' = 'all') {
 }
 
 /** Build a mock RationaleGenerator. */
-function makeMockRationaleGenerator() {
+function makeMockRationaleGenerator(): Record<string, unknown> {
   return {
     generateRationale: vi.fn().mockResolvedValue({
       rationale: 'Tyler Brooks was selected because he has the highest priority score.',
@@ -203,7 +191,7 @@ function makeMockRationaleGenerator() {
 }
 
 /** Build a mock PriorityWeightEngine that scores students in array order. */
-function makeMockEngine(studentIds: string[] = STUDENTS.map(s => s.studentId)) {
+function makeMockEngine(studentIds: string[] = STUDENTS.map(s => s.studentId)): Record<string, unknown> {
   return {
     scoreCandidates: vi.fn().mockReturnValue(
       studentIds.map((id, idx) => ({
@@ -232,7 +220,7 @@ function makeService(overrides: {
   rationale?: ReturnType<typeof makeMockRationaleGenerator>;
   engine?: ReturnType<typeof makeMockEngine>;
   prisma?: ReturnType<typeof makeMockPrisma>;
-} = {}) {
+} = {}): Record<string, unknown> {
   const prisma = overrides.prisma ?? makeMockPrisma();
   const studentsService = overrides.students ?? makeMockStudents();
   const reservationsService = overrides.reservations ?? makeMockReservations();
@@ -421,11 +409,13 @@ describe('WaitlistUseCaseService', () => {
     it('checks squawks before fetching students', async () => {
       const aircraft = makeMockAircraft(true);
       const callOrder: string[] = [];
+      // eslint-disable-next-line @typescript-eslint/require-await
       aircraft.getSquawks = vi.fn().mockImplementation(async () => {
         callOrder.push('squawks');
         return { success: true, data: [{ squawkId: 'sq-1', resolvedAt: null }] };
       });
       const students = makeMockStudents();
+      // eslint-disable-next-line @typescript-eslint/require-await
       students.listStudents = vi.fn().mockImplementation(async () => {
         callOrder.push('students');
         return { success: true, data: STUDENTS };

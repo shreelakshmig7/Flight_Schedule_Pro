@@ -19,6 +19,8 @@
  * Updated: PR-11 — Priority Weight Engine (added SuggestionsModule)
  * Updated: PR-12 — LLM Rationale Generator (added LlmModule)
  * Updated: PR-14 — Use Case B Reschedule (replaced WaitlistModule with UseCasesModule)
+ * Updated: PR-17 — Email Notifications (added NotificationsModule)
+ * Updated: PR-23 — Azure Application Insights Integration (added ObservabilityModule)
  */
 
 import { Module } from '@nestjs/common';
@@ -32,6 +34,8 @@ import { ChangeDetectionModule } from './change-detection/change-detection.modul
 import { SuggestionsModule } from './suggestions/suggestions.module';
 import { LlmModule } from './llm/llm.module';
 import { UseCasesModule } from './use-cases/use-cases.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { ObservabilityModule } from './observability/observability.module';
 
 @Module({
   imports: [
@@ -45,6 +49,8 @@ import { UseCasesModule } from './use-cases/use-cases.module';
     SuggestionsModule,
     LlmModule,
     UseCasesModule,
+    NotificationsModule,
+    ObservabilityModule,
   ],
   controllers: [],
   providers: [],

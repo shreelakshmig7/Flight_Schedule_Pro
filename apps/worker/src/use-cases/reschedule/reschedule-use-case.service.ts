@@ -40,8 +40,7 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
-import type { PrismaService } from '@fsp-scheduler/database';
-import { Prisma } from '@fsp-scheduler/database';
+import { Prisma, PrismaService } from '@fsp-scheduler/database';
 import type {
   ChangeEventMessage,
   FspFindATimeRequest,
@@ -60,11 +59,13 @@ import {
   RESCHEDULE_DEFAULT_DURATION_MINUTES,
 } from '@fsp-scheduler/shared-types';
 import type { RationaleInput } from '@fsp-scheduler/shared-types';
-import type { FindATimeService } from '@fsp-scheduler/fsp-client';
-import type { CivilTwilightService } from '@fsp-scheduler/fsp-client';
-import type { AvailabilityService } from '@fsp-scheduler/fsp-client';
-import type { ReservationsService } from '@fsp-scheduler/fsp-client';
-import type { RationaleGenerator } from '../../llm/rationale-generator';
+import {
+  FindATimeService,
+  CivilTwilightService,
+  AvailabilityService,
+  ReservationsService,
+} from '@fsp-scheduler/fsp-client';
+import { RationaleGenerator } from '../../llm/rationale-generator';
 
 /** Milliseconds per day — used for date arithmetic. */
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -166,14 +167,15 @@ export class RescheduleUseCaseService {
 
     if (preferSameInstructor && instructorId) {
       // First attempt: same instructor preferred
-      slots = await this.fetchSlots(String(fspOperatorId), {
+      const req1: Omit<FspFindATimeRequest, 'startDate' | 'endDate'> & { startDate: string; endDate: string } = {
         studentId,
         durationMinutes,
         startDate,
         endDate,
-        activityTypeId,
         preferredInstructorIds: [instructorId],
-      });
+      };
+      if (activityTypeId !== undefined) req1.activityTypeId = activityTypeId;
+      slots = await this.fetchSlots(String(fspOperatorId), req1);
 
       if (slots.length === 0) {
         // Fallback: any eligible instructor
@@ -181,25 +183,27 @@ export class RescheduleUseCaseService {
           `instructor fallback: no slots found with instructor ${instructorId} — retrying without instructor preference`,
           { service: RescheduleUseCaseService.name, operatorId },
         );
-        slots = await this.fetchSlots(String(fspOperatorId), {
+        const req2: Omit<FspFindATimeRequest, 'startDate' | 'endDate'> & { startDate: string; endDate: string } = {
           studentId,
           durationMinutes,
           startDate,
           endDate,
-          activityTypeId,
-        });
+        };
+        if (activityTypeId !== undefined) req2.activityTypeId = activityTypeId;
+        slots = await this.fetchSlots(String(fspOperatorId), req2);
       }
     } else {
-      slots = await this.fetchSlots(String(fspOperatorId), {
+      const req3: Omit<FspFindATimeRequest, 'startDate' | 'endDate'> & { startDate: string; endDate: string } = {
         studentId,
         durationMinutes,
         startDate,
         endDate,
-        activityTypeId,
-        ...(preferSameInstructor && instructorId
-          ? { preferredInstructorIds: [instructorId] }
-          : {}),
-      });
+      };
+      if (activityTypeId !== undefined) req3.activityTypeId = activityTypeId;
+      if (preferSameInstructor && instructorId) {
+        req3.preferredInstructorIds = [instructorId];
+      }
+      slots = await this.fetchSlots(String(fspOperatorId), req3);
     }
 
     if (slots.length === 0) {
@@ -337,7 +341,7 @@ export class RescheduleUseCaseService {
               durationMinutes,
               validateRequest,
               constraintResults,
-            } as Prisma.InputJsonValue,
+            } as unknown as Prisma.InputJsonValue,
             llmResponse: rationale.rationale,
             llmModel: 'claude-opus-4-6',
             expiresAt,

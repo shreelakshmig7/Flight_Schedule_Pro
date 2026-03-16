@@ -84,7 +84,7 @@ const SLOT_ONE = {
 };
 
 /** Mock twilight allowing the slot. */
-const makeTwilight = (date: string) => ({
+const makeTwilight = (date: string): Record<string, string> => ({
   locationId: 'loc-001',
   date,
   civilTwilightBegin: `${date}T06:00:00Z`,
@@ -133,7 +133,7 @@ function makeUseCaseService(overrides: {
   validateSuccess?: boolean;
   noExistingSuggestion?: boolean;
   policyConfig?: Record<string, unknown> | null;
-} = {}) {
+} = {}): Record<string, unknown> {
   const {
     progress = PROGRESS_ONE_PENDING,
     trainingSessions = [{ sessionId: 'ses-001', instructorId: 'usr-instr-001' }],
@@ -243,7 +243,7 @@ function makeScanService(overrides: {
   schedulableEvents?: { eventId: string; studentId?: string | null; enrollmentId?: string | null; locationId?: string | null }[];
   existingSuggestion?: Record<string, unknown> | null;
   nextLessonServiceFn?: ReturnType<typeof vi.fn>;
-} = {}) {
+} = {}): Record<string, unknown> {
   const {
     operators = [{ operatorId: OPERATOR_ID, fspOperatorId: FSP_OPERATOR_ID }],
     schedulableEvents = [{ eventId: 'ev-scan-001', studentId: STUDENT_ID, enrollmentId: ENROLLMENT_ID, locationId: 'loc-001' }],
@@ -457,8 +457,10 @@ describe('NextLessonUseCaseService', () => {
       await service.processLessonCompletion(devonEvent);
 
       const slotStarts = createdSuggestions.map(
-        s => (s.candidatePayload as Record<string, unknown>).slotStart,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+        s => (s.candidatePayload as unknown).slotStart,
       );
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const uniqueSlotStarts = new Set(slotStarts);
       expect(uniqueSlotStarts.size).toBe(slotStarts.length);
     });
@@ -585,10 +587,8 @@ describe('NextLessonScanService', () => {
       const { service } = makeScanService({
         existingSuggestion: { id: 'sug-existing', status: 'PENDING', useCaseType: 'NEXT_LESSON' },
       });
-      const warnSpy = vi.spyOn(
-        (service as unknown as { logger: { warn: (...a: unknown[]) => void } }).logger,
-        'warn',
-      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const warnSpy = vi.spyOn((service as any).logger, 'warn');
 
       await service.runHourlyScan();
 
@@ -612,10 +612,8 @@ describe('NextLessonScanService', () => {
       const { service } = makeScanService({
         existingSuggestion: { id: 'sug-existing', status: 'PENDING', useCaseType: 'NEXT_LESSON' },
       });
-      const warnSpy = vi.spyOn(
-        (service as unknown as { logger: { warn: (...a: unknown[]) => void } }).logger,
-        'warn',
-      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const warnSpy = vi.spyOn((service as any).logger, 'warn');
 
       await service.runHourlyScan();
 

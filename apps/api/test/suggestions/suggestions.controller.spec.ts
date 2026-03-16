@@ -41,7 +41,7 @@ const TENANT: TenantContextData = {
 
 const SUGGESTION_ID = 'clx-sugg-001';
 
-function makeSuggestionRow(status = SUGGESTION_STATUS.PENDING) {
+function makeSuggestionRow(status = SUGGESTION_STATUS.PENDING): Record<string, unknown> {
   return {
     id: SUGGESTION_ID,
     operatorId: OPERATOR_ID,

@@ -42,10 +42,10 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
-import type { PrismaService } from '@fsp-scheduler/database';
-import { Prisma } from '@fsp-scheduler/database';
+import { Prisma, PrismaService } from '@fsp-scheduler/database';
 import type {
   ChangeEventMessage,
+  FspFindATimeRequest,
   FspFindATimeSlot,
   FspReservationCreateRequest,
   FspCivilTwilight,
@@ -59,10 +59,8 @@ import {
   DISCOVERY_DEFAULT_DURATION_MINUTES,
 } from '@fsp-scheduler/shared-types';
 import type { RationaleInput } from '@fsp-scheduler/shared-types';
-import type { FindATimeService } from '@fsp-scheduler/fsp-client';
-import type { CivilTwilightService } from '@fsp-scheduler/fsp-client';
-import type { ReservationsService } from '@fsp-scheduler/fsp-client';
-import type { RationaleGenerator } from '../../llm/rationale-generator';
+import { FindATimeService, CivilTwilightService, ReservationsService } from '@fsp-scheduler/fsp-client';
+import { RationaleGenerator } from '../../llm/rationale-generator';
 
 /** Milliseconds per day — used for date arithmetic. */
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -113,7 +111,7 @@ export class DiscoveryUseCaseService {
    */
   public async processDiscoveryRequest(event: ChangeEventMessage): Promise<void> {
     const { operatorId, fspOperatorId, correlationId } = event;
-    const rawDiff = event.rawDiff as Record<string, unknown>;
+    const rawDiff = event.rawDiff;
 
     const prospectId = (rawDiff.prospectId as string) ?? '';
     const locationId = rawDiff.locationId as string | undefined;
@@ -161,8 +159,8 @@ export class DiscoveryUseCaseService {
 
     if (preferredDates.length > 0) {
       const sorted = [...preferredDates].sort();
-      startDate = sorted[0];
-      endDate = sorted[sorted.length - 1];
+      startDate = sorted[0] ?? '';
+      endDate = sorted[sorted.length - 1] ?? '';
     } else {
       startDate = now.toISOString().slice(0, 10);
       endDate = new Date(now.getTime() + searchWindowDays * MS_PER_DAY)
@@ -173,17 +171,19 @@ export class DiscoveryUseCaseService {
     // ── Step 4: Discover available slots via FindATimeService ─────────────────
     let slots: FspFindATimeSlot[] = [];
     try {
+      const requestData: FspFindATimeRequest = {
+        studentId: prospectId,
+        startDate,
+        endDate,
+        durationMinutes: DISCOVERY_DEFAULT_DURATION_MINUTES,
+        preferredAircraftIds: eligibleAircraftIds,
+      };
+      if (eligibleInstructorIds.length > 0) {
+        requestData.preferredInstructorIds = eligibleInstructorIds;
+      }
       const result = await this.findATimeService.getAvailableSlots(
         String(fspOperatorId),
-        {
-          startDate,
-          endDate,
-          durationMinutes: DISCOVERY_DEFAULT_DURATION_MINUTES,
-          ...(eligibleInstructorIds.length > 0
-            ? { preferredInstructorIds: eligibleInstructorIds }
-            : {}),
-          preferredAircraftIds: eligibleAircraftIds,
-        },
+        requestData,
       );
       if (result.success && result.data) {
         slots = result.data;
@@ -300,7 +300,7 @@ export class DiscoveryUseCaseService {
               locationId: locationId ?? null,
               validateRequest,
               constraintResults,
-            } as Prisma.InputJsonValue,
+            } as unknown as Prisma.InputJsonValue,
             llmResponse: rationale.rationale,
             llmModel: 'claude-opus-4-6',
             expiresAt,

@@ -35,6 +35,13 @@ async function bootstrap(): Promise<void> {
     new FastifyAdapter({ logger: false }),
   );
 
+  // Enable CORS so the web app (port 3002) can call the API (port 3000)
+  app.enableCors({
+    origin: process.env['CORS_ORIGIN'] ?? 'http://localhost:3002',
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    credentials: true,
+  });
+
   // Listen on all interfaces so Container Apps can route traffic
   await app.listen(port, '0.0.0.0');
   logger.log(`API listening on port ${port}`);

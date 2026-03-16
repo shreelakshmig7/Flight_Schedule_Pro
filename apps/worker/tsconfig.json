@@ -3,9 +3,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@fsp-scheduler/shared-types": ["../../packages/shared-types/src"],
-      "@fsp-scheduler/database": ["../../packages/database/src"],
-      "@fsp-scheduler/fsp-client": ["../../packages/fsp-client/src"]
+      "@fsp-scheduler/shared-types": ["../../packages/shared-types/src"]
     }
   },
   "include": ["src/**/*"],

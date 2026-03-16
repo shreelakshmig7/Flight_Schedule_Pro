@@ -22,7 +22,7 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import type { PrismaService } from '@fsp-scheduler/database';
+import { PrismaService } from '@fsp-scheduler/database';
 import {
   TIER1_RECENT_HOURS,
   TIER2_LOOKAHEAD_DAYS,
@@ -30,7 +30,7 @@ import {
 } from '@fsp-scheduler/shared-types';
 import type { FspReservation, PollingTier } from '@fsp-scheduler/shared-types';
 import { RawSnapshotStore } from './raw-snapshot.store';
-import type { PollingDispatcherService } from './polling-dispatcher.service';
+import { PollingDispatcherService } from './polling-dispatcher.service';
 
 /** Cron expression: every hour at minute 0. */
 const TIER_RECLASS_CRON = '0 * * * *';

@@ -15,6 +15,8 @@
  * PR: PR-7 — Authentication and Multi-Tenant Middleware
  */
 
+import type { PriorityWeightConfig } from './priority-weight.types';
+
 /**
  * Data held by the request-scoped TenantContext provider.
  * Populated by FspAuthGuard after successful token validation.
@@ -56,10 +58,10 @@ export interface OperatorConfigResponse {
   name: string;
   /** Polling frequency tier: TIER1 | TIER2 | TIER3. */
   pollingTier: string;
-  /** Priority weights for scheduling decisions (JSON config). */
-  priorityWeights: Record<string, unknown>;
-  /** Policy configuration for scheduling rules (JSON config). */
-  policyConfig: Record<string, unknown>;
+  /** Priority weights for scheduling decisions. */
+  priorityWeights: PriorityWeightConfig;
+  /** Policy configuration for scheduling rules. */
+  policyConfig: Record<string, unknown> | object;
   /** Whether this operator is active and should be polled. */
   isActive: boolean;
   /** ISO 8601 timestamp when this operator record was created. */

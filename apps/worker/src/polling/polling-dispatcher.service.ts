@@ -26,7 +26,7 @@ import {
   OnModuleInit,
   OnModuleDestroy,
 } from '@nestjs/common';
-import type { PrismaService } from '@fsp-scheduler/database';
+import { PrismaService } from '@fsp-scheduler/database';
 import {
   TIER1_POLL_INTERVAL_SECONDS,
   TIER2_POLL_INTERVAL_SECONDS,
@@ -92,14 +92,28 @@ export class PollingDispatcherService implements OnModuleInit, OnModuleDestroy {
       correlationId: 'init',
     });
 
-    const operators = await this.prisma.operator.findMany({
-      where: { isActive: true },
-      select: {
-        operatorId: true,
-        fspOperatorId: true,
-        pollingTier: true,
-      },
-    });
+    let operators: { operatorId: string; fspOperatorId: number; pollingTier: string }[];
+    try {
+      operators = await this.prisma.operator.findMany({
+        where: { isActive: true },
+        select: {
+          operatorId: true,
+          fspOperatorId: true,
+          pollingTier: true,
+        },
+      });
+    } catch (err) {
+      const isDev = process.env['NODE_ENV'] !== 'production';
+      if (isDev) {
+        this.logger.warn(
+          'Could not load operators (database unreachable) — starting with 0 operators. Polling will begin once the database is reachable and operators are bootstrapped.',
+          err instanceof Error ? err.message : String(err),
+        );
+        operators = [];
+      } else {
+        throw err;
+      }
+    }
 
     for (const op of operators) {
       this.register(op.operatorId, op.fspOperatorId, op.pollingTier as PollingTier);

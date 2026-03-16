@@ -3,19 +3,21 @@
  * --------------------------
  * Agentic Scheduler — FSP Integration — Suggestions REST controller
  * -----------------------------------------------------------------
- * Exposes four endpoints under /suggestions:
+ * Exposes six endpoints under /suggestions:
  *
  *   GET  /suggestions              — cursor-paginated list (tenant-scoped)
  *   POST /suggestions              — create a new PENDING suggestion
  *   POST /suggestions/:id/approve  — PENDING → APPROVED (FSP validateOnly)
  *   POST /suggestions/:id/reject   — PENDING → REJECTED
+ *   POST /suggestions/bulk-approve — approve multiple suggestions sequentially
+ *   POST /suggestions/bulk-reject  — reject multiple suggestions with same reason
  *
  * All endpoints are protected by the global FspAuthGuard. TenantContext is
  * populated by the guard before each handler executes.
  *
  * HTTP status codes:
  *   201 — suggestion created successfully
- *   200 — approve/reject/list completed successfully
+ *   200 — approve/reject/list/bulk completed successfully
  *   404 — suggestion not found for this tenant
  *   409 — invalid state transition or FSP validation failure
  *
@@ -23,7 +25,7 @@
  *
  * Author: Agentic Scheduler Team
  * Project: Agentic Scheduler — FSP Integration
- * PR: PR-10 — Suggestion State Machine
+ * PR: PR-20 — Bulk Approve/Decline and Activity Feed
  */
 
 import {
@@ -38,7 +40,7 @@ import {
 } from '@nestjs/common';
 import { SuggestionsService } from './suggestions.service';
 import { TenantContext } from '../auth/tenant-context';
-import type { CreateSuggestionDto, ListSuggestionsQuery } from './suggestions.service';
+import type { CreateSuggestionDto, ListSuggestionsQuery, SuggestionListResult } from './suggestions.service';
 
 /** Default page size for cursor-paginated list responses. */
 const DEFAULT_LIST_LIMIT = 20;
@@ -79,7 +81,7 @@ export class SuggestionsController {
   @HttpCode(HttpStatus.OK)
   public async list(
     @Query() query: Record<string, string | undefined>,
-  ) {
+  ): Promise<SuggestionListResult> {
     const tenant = this.tenantContext.get();
 
     const rawLimit = query['limit'] ? parseInt(query['limit'], 10) : DEFAULT_LIST_LIMIT;
@@ -113,7 +115,7 @@ export class SuggestionsController {
    */
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  public async create(@Body() dto: CreateSuggestionDto) {
+  public async create(@Body() dto: CreateSuggestionDto): Promise<unknown> {
     const tenant = this.tenantContext.get();
     return this.suggestionsService.createSuggestion(tenant, dto);
   }
@@ -132,7 +134,7 @@ export class SuggestionsController {
    */
   @Post(':id/approve')
   @HttpCode(HttpStatus.OK)
-  public async approve(@Param('id') id: string) {
+  public async approve(@Param('id') id: string): Promise<unknown> {
     const tenant = this.tenantContext.get();
     return this.suggestionsService.approveSuggestion(tenant, id);
   }
@@ -155,8 +157,62 @@ export class SuggestionsController {
   public async reject(
     @Param('id') id: string,
     @Body() body: { reason?: string },
-  ) {
+  ): Promise<unknown> {
     const tenant = this.tenantContext.get();
     return this.suggestionsService.rejectSuggestion(tenant, id, body.reason ?? '');
+  }
+
+  // ── POST /suggestions/bulk-approve ────────────────────────────────────────
+
+  /**
+   * Bulk approves multiple PENDING suggestions sequentially.
+   *
+   * Processes suggestions one by one to avoid FSP rate limit exhaustion.
+   * If any suggestion fails validation or is in an invalid state, it is
+   * skipped and the rest continue processing.
+   *
+   * Returns an object with two arrays:
+   *   - approved: suggestions that were successfully approved
+   *   - failed: suggestions that failed with error reasons
+   *
+   * @param body - Request body with { suggestionIds: string[] }
+   * @returns Object with approved and failed arrays (HTTP 200).
+   */
+  @Post('bulk-approve')
+  @HttpCode(HttpStatus.OK)
+  public async bulkApprove(
+    @Body() body: { suggestionIds: string[] },
+  ): Promise<{ approved: unknown[]; failed: Array<{ id: string; reason: string }> }> {
+    const tenant = this.tenantContext.get();
+    return this.suggestionsService.bulkApproveSuggestions(tenant, body.suggestionIds);
+  }
+
+  // ── POST /suggestions/bulk-reject ─────────────────────────────────────────
+
+  /**
+   * Bulk rejects multiple PENDING suggestions with the same reason.
+   *
+   * Processes suggestions sequentially. If any suggestion is in an invalid
+   * state or not found, it is skipped and the rest continue processing.
+   * The same reason is applied to all selected suggestions.
+   *
+   * Returns an object with two arrays:
+   *   - rejected: suggestions that were successfully rejected
+   *   - failed: suggestions that failed with error reasons
+   *
+   * @param body - Request body with { suggestionIds: string[], reason: string }
+   * @returns Object with rejected and failed arrays (HTTP 200).
+   */
+  @Post('bulk-reject')
+  @HttpCode(HttpStatus.OK)
+  public async bulkReject(
+    @Body() body: { suggestionIds: string[]; reason: string },
+  ): Promise<{ rejected: unknown[]; failed: Array<{ id: string; reason: string }> }> {
+    const tenant = this.tenantContext.get();
+    return this.suggestionsService.bulkRejectSuggestions(
+      tenant,
+      body.suggestionIds,
+      body.reason,
+    );
   }
 }

@@ -34,8 +34,7 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
-import type { PrismaService } from '@fsp-scheduler/database';
-import { Prisma } from '@fsp-scheduler/database';
+import { Prisma, PrismaService } from '@fsp-scheduler/database';
 import type {
   ChangeEventMessage,
   FspStudent,
@@ -56,13 +55,15 @@ import type {
   CandidateInput,
   RationaleInput,
 } from '@fsp-scheduler/shared-types';
-import type { StudentsService } from '@fsp-scheduler/fsp-client';
-import type { ReservationsService } from '@fsp-scheduler/fsp-client';
-import type { EnrollmentService } from '@fsp-scheduler/fsp-client';
-import type { AircraftService } from '@fsp-scheduler/fsp-client';
-import type { AvailabilityService } from '@fsp-scheduler/fsp-client';
-import type { RationaleGenerator } from '../../llm/rationale-generator';
-import type { PriorityWeightEngine } from '../../suggestions/priority-weight.engine';
+import {
+  StudentsService,
+  ReservationsService,
+  EnrollmentService,
+  AircraftService,
+  AvailabilityService,
+} from '@fsp-scheduler/fsp-client';
+import { RationaleGenerator } from '../../llm/rationale-generator';
+import { PriorityWeightEngine } from '../../suggestions/priority-weight.engine';
 
 /** Milliseconds per day — used for date range calculations. */
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -314,7 +315,7 @@ export class WaitlistUseCaseService {
             activityTypeId: activityTypeId ?? null,
             validateRequest,
             constraintResults,
-          } as Prisma.InputJsonValue,
+          } as unknown as Prisma.InputJsonValue,
           llmResponse: rationale.rationale,
           llmModel: 'claude-opus-4-6',
           expiresAt,
@@ -335,7 +336,7 @@ export class WaitlistUseCaseService {
             studentId: candidate.studentId,
             score: candidate.score,
             usedFallback: rationale.usedFallback,
-          } as Prisma.InputJsonValue,
+          } as unknown as Prisma.InputJsonValue,
         },
       });
 
@@ -399,16 +400,18 @@ export class WaitlistUseCaseService {
 
     if (enrollmentsResult.success && enrollmentsResult.data && enrollmentsResult.data.length > 0) {
       const activeEnrollment = enrollmentsResult.data[0];
-      const progressResult = await this.enrollmentService.getProgress(
-        fspOperatorId,
-        activeEnrollment.enrollmentId,
-      );
-      if (progressResult.success && progressResult.data) {
-        const p: FspEnrollmentProgress = progressResult.data;
-        enrollmentProgress = {
-          completedHours: p.completedHours ?? 0,
-          requiredHours: p.requiredHours ?? 0,
-        };
+      if (activeEnrollment) {
+        const progressResult = await this.enrollmentService.getProgress(
+          fspOperatorId,
+          activeEnrollment.enrollmentId,
+        );
+        if (progressResult.success && progressResult.data) {
+          const p: FspEnrollmentProgress = progressResult.data;
+          enrollmentProgress = {
+            completedHours: p.completedHours ?? 0,
+            requiredHours: p.requiredHours ?? 0,
+          };
+        }
       }
     }
 
@@ -426,7 +429,7 @@ export class WaitlistUseCaseService {
    * @param raw - Raw JSON value from the database `priorityWeights` column.
    * @returns A valid PriorityWeightConfig.
    */
-  private parsePriorityWeights(raw: unknown) {
+  private parsePriorityWeights(raw: unknown): ReturnType<PriorityWeightEngine['getDefaultConfig']> {
     try {
       if (typeof raw === 'object' && raw !== null) {
         return raw as ReturnType<PriorityWeightEngine['getDefaultConfig']>;

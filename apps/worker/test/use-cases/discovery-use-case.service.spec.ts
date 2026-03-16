@@ -51,7 +51,7 @@ const BASE_EVENT: ChangeEventMessage = {
   },
 };
 
-const makeTwilight = (date: string) => ({
+const makeTwilight = (date: string): Record<string, string> => ({
   locationId: 'loc-001',
   date,
   civilTwilightBegin: `${date}T06:00:00Z`,
@@ -78,7 +78,7 @@ function makeService(overrides: {
   policyConfig?: typeof POLICY_CONFIG | null;
   twilight?: Record<string, ReturnType<typeof makeTwilight>> | null;
   validateSuccess?: boolean;
-} = {}) {
+} = {}): Record<string, unknown> {
   const {
     slots = THREE_SLOTS,
     policyConfig = POLICY_CONFIG,
@@ -313,7 +313,8 @@ describe('DiscoveryUseCaseService', () => {
 
       await service.processDiscoveryRequest(event);
 
-      const callArgs = (findATimeService.getAvailableSlots as ReturnType<typeof vi.fn>).mock.calls[0][1] as Record<string, unknown>;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const callArgs = (findATimeService.getAvailableSlots as any).mock.calls[0][1] as Record<string, unknown>;
       // endDate should be approx 14 days after startDate
       const start = new Date(callArgs.startDate as string);
       const end = new Date(callArgs.endDate as string);
@@ -329,7 +330,8 @@ describe('DiscoveryUseCaseService', () => {
       const { service } = makeService({
         policyConfig: { ...POLICY_CONFIG, discoveryEligibleAircraftIds: [] },
       });
-      const warnSpy = vi.spyOn((service as unknown as { logger: { warn: (...a: unknown[]) => void } }).logger, 'warn');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const warnSpy = vi.spyOn((service as any).logger, 'warn');
 
       await service.processDiscoveryRequest(BASE_EVENT);
 
@@ -341,7 +343,8 @@ describe('DiscoveryUseCaseService', () => {
       const { service } = makeService({
         policyConfig: { ...POLICY_CONFIG, discoveryEligibleAircraftIds: [] },
       });
-      const warnSpy = vi.spyOn((service as unknown as { logger: { warn: (...a: unknown[]) => void } }).logger, 'warn');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const warnSpy = vi.spyOn((service as any).logger, 'warn');
 
       await service.processDiscoveryRequest(BASE_EVENT);
 
@@ -376,9 +379,6 @@ describe('DiscoveryUseCaseService', () => {
       const nightSlots = [
         { startDateTime: '2025-10-16T03:00:00Z', endDateTime: '2025-10-16T05:00:00Z', instructorId: 'usr-instr-001', aircraftId: 'ac-001' },
       ];
-      const twilightForNight = {
-        '2025-10-16': { locationId: 'loc-001', date: '2025-10-16', civilTwilightBegin: '2025-10-16T06:00:00Z', civilTwilightEnd: '2025-10-16T22:00:00Z' },
-      };
 
       // Preferred dates that are "before sunrise" (03:00 UTC)
       const earlyEvent: ChangeEventMessage = {
@@ -396,7 +396,8 @@ describe('DiscoveryUseCaseService', () => {
         twilight: nightTwilight,
         policyConfig: { ...POLICY_CONFIG, discoveryEligibleInstructorIds: ['usr-instr-001'], discoveryEligibleAircraftIds: ['ac-001'] },
       });
-      const warnSpy = vi.spyOn((service as unknown as { logger: { warn: (...a: unknown[]) => void } }).logger, 'warn');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const warnSpy = vi.spyOn((service as any).logger, 'warn');
 
       await service.processDiscoveryRequest(earlyEvent);
 
