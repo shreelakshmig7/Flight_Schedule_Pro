@@ -92,6 +92,27 @@ export class StudentsService {
   }
 
   /**
+   * Retrieves a single student by their studentId.
+   *
+   * @param operatorId - The FSP operator identifier.
+   * @param studentId  - The FSP student identifier.
+   * @returns ServiceResult containing the student record, or an error.
+   */
+  public async getStudentById(
+    operatorId: string,
+    studentId: string,
+  ): Promise<ServiceResult<FspStudent>> {
+    try {
+      const data = await this.coreClient.get<FspStudent>(
+        `/api/V1/operator/${operatorId}/students/${studentId}`,
+      );
+      return { success: true, data };
+    } catch (err) {
+      return buildError(err);
+    }
+  }
+
+  /**
    * Retrieves active training alerts for all students in an operator.
    *
    * @param operatorId - The FSP operator identifier.

@@ -32,7 +32,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import type { PrismaService } from '@fsp-scheduler/database';
 import { SUGGESTION_STATUS, USE_CASE_TYPE } from '@fsp-scheduler/shared-types';
 import type { SchedulableEventsService } from '@fsp-scheduler/fsp-client';
-import type { NextLessonUseCaseService } from './next-lesson-use-case.service';
+import type { NextLessonUseCaseService, ScheduleNextLessonParams } from './next-lesson-use-case.service';
 
 /**
  * Hourly scan service that proactively schedules next lessons for students
@@ -164,13 +164,16 @@ export class NextLessonScanService {
 
       // ── Schedule the next lesson ───────────────────────────────────────────
       try {
-        await this.nextLessonUseCaseService.scheduleNextLessonForStudent({
+        const params: ScheduleNextLessonParams = {
           operatorId,
           fspOperatorId,
           studentId,
           enrollmentId,
-          locationId: event.locationId,
-        });
+        };
+        if (event.locationId !== undefined) {
+          params.locationId = event.locationId;
+        }
+        await this.nextLessonUseCaseService.scheduleNextLessonForStudent(params);
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
         this.logger.error(

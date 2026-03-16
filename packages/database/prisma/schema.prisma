@@ -39,6 +39,9 @@ model Operator {
   /// Operator scheduling policy (JSON). Null → RESCHEDULE_DEFAULT_POLICY_CONFIG applies.
   /// Shape: { preferSameInstructor?: boolean }
   policyConfig    Json?
+  /// Email/SMS notification preferences, branding, and template overrides (JSON).
+  /// Shape: { emailTemplates?: Record<string, EmailTemplate>, smsTemplates?: Record<string, SmsTemplate> }
+  notificationConfig Json?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 

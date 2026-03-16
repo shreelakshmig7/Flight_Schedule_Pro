@@ -10,6 +10,8 @@
  * GET  /operators/me                     — requires FSP bearer token
  * GET  /operators/me/priority-weights    — requires FSP bearer token
  * PUT  /operators/me/priority-weights    — requires FSP bearer token
+ * PUT  /operators/me/policy              — requires FSP bearer token
+ * PUT  /operators/me/notification-config — requires FSP bearer token
  *
  * Key exports: OperatorsController
  *
@@ -17,6 +19,7 @@
  * Project: Agentic Scheduler — FSP Integration
  * PR: PR-7 — Authentication and Multi-Tenant Middleware
  * Updated: PR-11 — Priority Weight Engine (added priority-weights endpoints)
+ * Updated: PR-21 — Operator Configuration UI (added policy and notification-config endpoints)
  */
 
 import { Body, Controller, Get, HttpCode, HttpStatus, Post, Put } from '@nestjs/common';
@@ -28,6 +31,10 @@ import type {
   OperatorConfigResponse,
   PriorityWeightConfig,
   UpdatePriorityWeightsRequest,
+  SchedulingPolicyConfig,
+  NotificationConfig,
+  UpdatePolicyConfigRequest,
+  UpdateNotificationConfigRequest,
 } from '@fsp-scheduler/shared-types';
 
 /**
@@ -107,5 +114,41 @@ export class OperatorsController {
   ): Promise<PriorityWeightConfig> {
     const tenantData = this.tenantContext.get();
     return this.operatorsService.updatePriorityWeights(tenantData, req);
+  }
+
+  /**
+   * Updates the scheduling policy configuration for the authenticated tenant.
+   *
+   * Validates that rescheduleWindowDays > 0. Performs a partial merge — only
+   * supplied fields are updated. Returns the full updated configuration.
+   * Writes an audit log entry for the configuration change.
+   *
+   * @param req - Partial policy update body.
+   * @returns The updated SchedulingPolicyConfig.
+   */
+  @Put('me/policy')
+  public async updatePolicy(
+    @Body() req: UpdatePolicyConfigRequest,
+  ): Promise<SchedulingPolicyConfig> {
+    const tenantData = this.tenantContext.get();
+    return this.operatorsService.updatePolicy(tenantData, req);
+  }
+
+  /**
+   * Updates the notification configuration for the authenticated tenant.
+   *
+   * Validates SMS templates (max 160 chars). Performs a partial merge — only
+   * supplied sections are updated. Returns the full updated configuration.
+   * Writes an audit log entry for the configuration change.
+   *
+   * @param req - Partial notification config update body.
+   * @returns The updated NotificationConfig.
+   */
+  @Put('me/notification-config')
+  public async updateNotificationConfig(
+    @Body() req: UpdateNotificationConfigRequest,
+  ): Promise<NotificationConfig> {
+    const tenantData = this.tenantContext.get();
+    return this.operatorsService.updateNotificationConfig(tenantData, req);
   }
 }

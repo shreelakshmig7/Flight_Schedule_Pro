@@ -40,7 +40,7 @@ import {
 } from '@nestjs/common';
 import { SuggestionsService } from './suggestions.service';
 import { TenantContext } from '../auth/tenant-context';
-import type { CreateSuggestionDto, ListSuggestionsQuery } from './suggestions.service';
+import type { CreateSuggestionDto, ListSuggestionsQuery, SuggestionListResult } from './suggestions.service';
 
 /** Default page size for cursor-paginated list responses. */
 const DEFAULT_LIST_LIMIT = 20;
@@ -81,7 +81,7 @@ export class SuggestionsController {
   @HttpCode(HttpStatus.OK)
   public async list(
     @Query() query: Record<string, string | undefined>,
-  ) {
+  ): Promise<SuggestionListResult> {
     const tenant = this.tenantContext.get();
 
     const rawLimit = query['limit'] ? parseInt(query['limit'], 10) : DEFAULT_LIST_LIMIT;
@@ -115,7 +115,7 @@ export class SuggestionsController {
    */
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  public async create(@Body() dto: CreateSuggestionDto) {
+  public async create(@Body() dto: CreateSuggestionDto): Promise<unknown> {
     const tenant = this.tenantContext.get();
     return this.suggestionsService.createSuggestion(tenant, dto);
   }
@@ -134,7 +134,7 @@ export class SuggestionsController {
    */
   @Post(':id/approve')
   @HttpCode(HttpStatus.OK)
-  public async approve(@Param('id') id: string) {
+  public async approve(@Param('id') id: string): Promise<unknown> {
     const tenant = this.tenantContext.get();
     return this.suggestionsService.approveSuggestion(tenant, id);
   }
@@ -157,7 +157,7 @@ export class SuggestionsController {
   public async reject(
     @Param('id') id: string,
     @Body() body: { reason?: string },
-  ) {
+  ): Promise<unknown> {
     const tenant = this.tenantContext.get();
     return this.suggestionsService.rejectSuggestion(tenant, id, body.reason ?? '');
   }
@@ -182,7 +182,7 @@ export class SuggestionsController {
   @HttpCode(HttpStatus.OK)
   public async bulkApprove(
     @Body() body: { suggestionIds: string[] },
-  ) {
+  ): Promise<{ approved: unknown[]; failed: Array<{ id: string; reason: string }> }> {
     const tenant = this.tenantContext.get();
     return this.suggestionsService.bulkApproveSuggestions(tenant, body.suggestionIds);
   }
@@ -207,7 +207,7 @@ export class SuggestionsController {
   @HttpCode(HttpStatus.OK)
   public async bulkReject(
     @Body() body: { suggestionIds: string[]; reason: string },
-  ) {
+  ): Promise<{ rejected: unknown[]; failed: Array<{ id: string; reason: string }> }> {
     const tenant = this.tenantContext.get();
     return this.suggestionsService.bulkRejectSuggestions(
       tenant,

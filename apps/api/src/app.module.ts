@@ -16,6 +16,9 @@
  * Updated: PR-7 — Authentication and Multi-Tenant Middleware (added AuthModule,
  *           OperatorsModule, FspClientModule, APP_GUARD)
  * Updated: PR-10 — Suggestion State Machine (added SuggestionsModule)
+ * Updated: PR-22 — Immutable Audit Log (added AuditModule)
+ * Updated: PR-23 — Azure Application Insights Integration (added ObservabilityModule)
+ * Updated: PR-24 — Operator Dashboard (added DashboardModule)
  */
 
 import { Module } from '@nestjs/common';
@@ -27,6 +30,9 @@ import { AuthModule } from './auth/auth.module';
 import { FspAuthGuard } from './auth/fsp-auth.guard';
 import { OperatorsModule } from './operators/operators.module';
 import { SuggestionsModule } from './suggestions/suggestions.module';
+import { AuditModule } from './audit/audit.module';
+import { ObservabilityModule } from './observability/observability.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -35,6 +41,9 @@ import { SuggestionsModule } from './suggestions/suggestions.module';
     AuthModule,
     OperatorsModule,
     SuggestionsModule,
+    AuditModule,
+    ObservabilityModule,
+    DashboardModule,
   ],
   controllers: [HealthController],
   providers: [

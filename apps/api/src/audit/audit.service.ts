@@ -120,7 +120,7 @@ export class AuditService {
     );
 
     // Build where clause with tenant isolation and optional filters
-    const whereClause: Record<string, any> = {
+    const whereClause: Record<string, unknown> = {
       operatorId: tenantContext.operatorId,
     };
 
@@ -137,7 +137,7 @@ export class AuditService {
     }
 
     // Date range filters
-    const dateFilter: Record<string, any> = {};
+    const dateFilter: Record<string, Date> = {};
     if (filters?.startDate) {
       dateFilter.gte = filters.startDate;
     }
@@ -150,8 +150,9 @@ export class AuditService {
 
     // Cursor-based pagination: fetch limit+1 to determine if more results exist
     if (cursor) {
+      const existing = (whereClause.createdAt ?? {}) as Record<string, unknown>;
       whereClause.createdAt = {
-        ...whereClause.createdAt,
+        ...existing,
         lt: cursor,
       };
     }
@@ -171,17 +172,23 @@ export class AuditService {
     });
 
     // Determine if there are more results
-    let nextCursor: string | undefined;
     const results = entries;
-    if (entries.length > limit) {
+    const hasMore = entries.length > limit;
+    if (hasMore) {
       results.pop(); // Remove the extra entry
-      nextCursor = entries[limit].createdAt.toISOString();
     }
 
-    return {
-      entries: results.map(this.toAuditLogEntry),
-      nextCursor,
+    const page: AuditLogPage = {
+      entries: results.map((e) => this.toAuditLogEntry(e)),
     };
+    if (hasMore && entries.length > 0) {
+      const lastEntry = entries[limit - 1];
+      if (lastEntry) {
+        page.nextCursor = lastEntry.createdAt.toISOString();
+      }
+    }
+
+    return page;
   }
 
   /**
@@ -322,13 +329,18 @@ export class AuditService {
     metadata?: unknown;
     createdAt: Date;
   }): AuditLogEntry {
-    return {
+    const result: AuditLogEntry = {
       id: entry.id,
       eventType: entry.action,
       actorId: entry.operatorId,
-      suggestionId: entry.entityId ?? undefined,
-      payload: entry.metadata as object | undefined,
       createdAt: entry.createdAt.toISOString(),
     };
+    if (entry.entityId != null) {
+      result.suggestionId = entry.entityId;
+    }
+    if (entry.metadata != null) {
+      result.payload = entry.metadata as object;
+    }
+    return result;
   }
 }

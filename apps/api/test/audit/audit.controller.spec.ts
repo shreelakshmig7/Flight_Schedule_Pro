@@ -35,7 +35,7 @@ function makeAuditEntry(overrides: Partial<{
   eventType: string;
   actorId: string;
   createdAt: string;
-}> = {}) {
+}> = {}): Record<string, unknown> {
   return {
     id: overrides.id ?? 'audit-001',
     eventType: overrides.eventType ?? 'SUGGESTION_APPROVED',
@@ -62,7 +62,9 @@ describe('AuditController', () => {
     };
 
     controller = new AuditController(
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       auditService as any,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       tenantContext as any,
     );
   });

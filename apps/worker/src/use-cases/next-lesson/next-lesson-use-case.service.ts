@@ -50,6 +50,7 @@ import type {
   ChangeEventMessage,
   FspEnrollmentProgress,
   FspFindATimeSlot,
+  FspFindATimeRequest,
   FspCivilTwilight,
   FspSchedulableEvent,
   FspReservationCreateRequest,
@@ -132,7 +133,7 @@ export class NextLessonUseCaseService {
    * @param event - ChangeEventMessage with changeType === 'STATUS_CHANGE'.
    */
   public async processLessonCompletion(event: ChangeEventMessage): Promise<void> {
-    const rawDiff = event.rawDiff as Record<string, unknown>;
+    const rawDiff = event.rawDiff;
     const newStatus = rawDiff.newStatus as string | undefined;
 
     if (newStatus !== 'COMPLETED') {
@@ -145,16 +146,19 @@ export class NextLessonUseCaseService {
 
     const studentId = rawDiff.studentId as string;
     const enrollmentId = rawDiff.enrollmentId as string;
-    const locationId = rawDiff.locationId as string | undefined;
+    const locationId = rawDiff.locationId as string | null | undefined;
 
-    await this.scheduleNextLessonForStudent({
+    const params: ScheduleNextLessonParams = {
       operatorId: event.operatorId,
       fspOperatorId: event.fspOperatorId,
       studentId,
       enrollmentId,
-      locationId,
       correlationId: event.correlationId,
-    });
+    };
+    if (locationId !== undefined) {
+      params.locationId = locationId;
+    }
+    await this.scheduleNextLessonForStudent(params);
   }
 
   /**
@@ -228,6 +232,13 @@ export class NextLessonUseCaseService {
 
     // First incomplete milestone is the next lesson to schedule
     const nextMilestone = pendingMilestones[0];
+    if (!nextMilestone) {
+      this.logger.warn(
+        `nextMilestone unexpectedly undefined for student ${studentId}`,
+        { service: NextLessonUseCaseService.name, operatorId },
+      );
+      return;
+    }
     const nextLessonId = nextMilestone.milestoneId;
 
     this.logger.log(
@@ -295,7 +306,7 @@ export class NextLessonUseCaseService {
         );
         if (sessionsResult.success && sessionsResult.data && sessionsResult.data.length > 0) {
           const lastSession = sessionsResult.data[sessionsResult.data.length - 1];
-          if (lastSession.instructorId) {
+          if (lastSession && lastSession.instructorId) {
             preferredInstructorIds = [lastSession.instructorId];
             this.logger.log(
               `Instructor continuity: preferring ${lastSession.instructorId} for student ${studentId}`,
@@ -321,11 +332,16 @@ export class NextLessonUseCaseService {
     // Discover available slots
     let slots: FspFindATimeSlot[] = [];
     try {
-      const result = await this.findATimeService.getAvailableSlots(fspOpStr, {
+      const requestData: FspFindATimeRequest = {
+        studentId,
         startDate,
         endDate,
-        ...(preferredInstructorIds ? { preferredInstructorIds } : {}),
-      });
+        durationMinutes: 60,
+      };
+      if (preferredInstructorIds) {
+        requestData.preferredInstructorIds = preferredInstructorIds;
+      }
+      const result = await this.findATimeService.getAvailableSlots(fspOpStr, requestData);
       if (result.success && result.data) {
         slots = result.data;
       }
@@ -431,7 +447,7 @@ export class NextLessonUseCaseService {
               locationId: locationId ?? null,
               validateRequest,
               constraintResults,
-            } as Prisma.InputJsonValue,
+            } as unknown as Prisma.InputJsonValue,
             llmResponse: rationale.rationale,
             llmModel: 'claude-opus-4-6',
             expiresAt,

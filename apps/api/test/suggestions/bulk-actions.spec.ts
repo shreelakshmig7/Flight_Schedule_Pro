@@ -18,10 +18,8 @@
 
 import 'reflect-metadata';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import {
-  ConflictException,
-  NotFoundException,
-} from '@nestjs/common';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { SuggestionsService } from '../../src/suggestions/suggestions.service';
 import { SUGGESTION_STATUS } from '@fsp-scheduler/shared-types';
 import type { TenantContextData } from '@fsp-scheduler/shared-types';
@@ -45,7 +43,7 @@ function makeSuggestion(overrides: Partial<{
   id: string;
   operatorId: string;
   status: string;
-}> = {}) {
+}> = {}): Record<string, unknown> {
   return {
     id: overrides.id ?? 'clx-sugg-001',
     operatorId: overrides.operatorId ?? OPERATOR_ID,
@@ -71,7 +69,7 @@ function makeSuggestion(overrides: Partial<{
 
 // ── Mock factories ────────────────────────────────────────────────────────────
 
-function makePrisma() {
+function makePrisma(): Record<string, unknown> {
   return {
     suggestion: {
       create: vi.fn(),
@@ -85,6 +83,7 @@ function makePrisma() {
       create: vi.fn(),
       findMany: vi.fn(),
     },
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     $transaction: vi.fn((fn) => {
       const txPrisma = {
         suggestion: {
@@ -96,18 +95,19 @@ function makePrisma() {
           create: vi.fn(),
         },
       };
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
       return fn(txPrisma);
     }),
   };
 }
 
-function makeReservationsService() {
+function makeReservationsService(): Record<string, unknown> {
   return {
     validateReservation: vi.fn(),
   };
 }
 
-function makePublisher() {
+function makePublisher(): Record<string, unknown> {
   return {
     publishSuggestionResult: vi.fn(),
   };
@@ -126,9 +126,13 @@ describe('SuggestionsService — Bulk Actions', () => {
     reservationsService = makeReservationsService();
     publisher = makePublisher();
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     service = new SuggestionsService(
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       prisma as any,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       reservationsService as any,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       publisher as any,
     );
   });
@@ -147,14 +151,17 @@ describe('SuggestionsService — Bulk Actions', () => {
       let updateCallIndex = 0;
 
       // Mock $transaction: for approveSuggestion and rejectSuggestion
-      (prisma.$transaction as any).mockImplementation(async (fn: any) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      (prisma.$transaction as any).mockImplementation((fn: any) => {
         const tx = {
           suggestion: {
-            findFirst: vi.fn(async () => {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+            findFirst: vi.fn(() => {
               const idx = findFirstCallIndex++;
               return idx < suggestions.length ? suggestions[idx] : null;
             }),
-            update: vi.fn(async (args: any) => {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+            update: vi.fn((_args: any) => {
               return {
                 ...suggestions[updateCallIndex++],
                 status: SUGGESTION_STATUS.APPROVED,
@@ -167,10 +174,12 @@ describe('SuggestionsService — Bulk Actions', () => {
             create: vi.fn().mockResolvedValue({}),
           },
         };
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
         return fn(tx);
       });
 
       // Mock validateReservation to return success
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       (reservationsService.validateReservation as any).mockResolvedValue({
         success: true,
       });
@@ -197,14 +206,17 @@ describe('SuggestionsService — Bulk Actions', () => {
       let updateCallIndex = 0;
 
       // Mock $transaction
-      (prisma.$transaction as any).mockImplementation(async (fn: any) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      (prisma.$transaction as any).mockImplementation((fn: any) => {
         const tx = {
           suggestion: {
-            findFirst: vi.fn(async () => {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+            findFirst: vi.fn(() => {
               const idx = findFirstCallIndex++;
               return idx < suggestions.length ? suggestions[idx] : null;
             }),
-            update: vi.fn(async () => {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+            update: vi.fn(() => {
               return {
                 ...suggestions[updateCallIndex++],
                 status: SUGGESTION_STATUS.APPROVED,
@@ -215,6 +227,7 @@ describe('SuggestionsService — Bulk Actions', () => {
             create: vi.fn().mockResolvedValue({}),
           },
         };
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
         return fn(tx);
       });
 
@@ -240,7 +253,8 @@ describe('SuggestionsService — Bulk Actions', () => {
 
       // Mock: first exists, second doesn't
       let callCount = 0;
-      (prisma.$transaction as any).mockImplementation(async (fn: any) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      (prisma.$transaction as any).mockImplementation((fn: any) => {
         callCount++;
         const tx = {
           suggestion: {
@@ -255,6 +269,7 @@ describe('SuggestionsService — Bulk Actions', () => {
             create: vi.fn().mockResolvedValue({}),
           },
         };
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
         return fn(tx);
       });
 
@@ -275,7 +290,8 @@ describe('SuggestionsService — Bulk Actions', () => {
       const ids = ['sugg-1'];
       const suggestion = makeSuggestion({ status: SUGGESTION_STATUS.REJECTED });
 
-      (prisma.$transaction as any).mockImplementation(async (fn: any) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      (prisma.$transaction as any).mockImplementation((fn: any) => {
         const tx = {
           suggestion: {
             findFirst: vi.fn().mockResolvedValue(suggestion),
@@ -285,6 +301,7 @@ describe('SuggestionsService — Bulk Actions', () => {
             create: vi.fn(),
           },
         };
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
         return fn(tx);
       });
 
@@ -314,7 +331,8 @@ describe('SuggestionsService — Bulk Actions', () => {
       );
 
       let callCount = 0;
-      (prisma.$transaction as any).mockImplementation(async (fn: any) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      (prisma.$transaction as any).mockImplementation((fn: any) => {
         const tx = {
           suggestion: {
             findFirst: vi
@@ -331,6 +349,7 @@ describe('SuggestionsService — Bulk Actions', () => {
           },
         };
         callCount++;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
         return fn(tx);
       });
 
@@ -347,7 +366,8 @@ describe('SuggestionsService — Bulk Actions', () => {
       const suggestion2 = makeSuggestion({ id: 'sugg-2', status: SUGGESTION_STATUS.APPROVED });
 
       let callCount = 0;
-      (prisma.$transaction as any).mockImplementation(async (fn: any) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      (prisma.$transaction as any).mockImplementation((fn: any) => {
         const currentSuggestion = callCount === 0 ? suggestion1 : suggestion2;
         const tx = {
           suggestion: {
@@ -362,6 +382,7 @@ describe('SuggestionsService — Bulk Actions', () => {
           },
         };
         callCount++;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
         return fn(tx);
       });
 

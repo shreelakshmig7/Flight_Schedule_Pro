@@ -76,11 +76,14 @@ export class ChangeEventConsumer implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   /** Subscribes to the change-events queue when the module initialises. */
+  // eslint-disable-next-line @typescript-eslint/require-await
   async onModuleInit(): Promise<void> {
     this.receiver = this.serviceBusService.createReceiver(QUEUE_NAMES.CHANGE_EVENTS);
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     this.receiver.subscribe({
       processMessage: (msg) => this.processMessage(msg),
+      // eslint-disable-next-line @typescript-eslint/require-await
       processError: async (args) => {
         this.logger.error(
           `Error from change-events receiver: ${args.error.message}`,

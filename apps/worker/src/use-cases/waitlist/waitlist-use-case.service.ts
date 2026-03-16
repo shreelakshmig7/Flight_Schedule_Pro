@@ -314,7 +314,7 @@ export class WaitlistUseCaseService {
             activityTypeId: activityTypeId ?? null,
             validateRequest,
             constraintResults,
-          } as Prisma.InputJsonValue,
+          } as unknown as Prisma.InputJsonValue,
           llmResponse: rationale.rationale,
           llmModel: 'claude-opus-4-6',
           expiresAt,
@@ -335,7 +335,7 @@ export class WaitlistUseCaseService {
             studentId: candidate.studentId,
             score: candidate.score,
             usedFallback: rationale.usedFallback,
-          } as Prisma.InputJsonValue,
+          } as unknown as Prisma.InputJsonValue,
         },
       });
 
@@ -399,16 +399,18 @@ export class WaitlistUseCaseService {
 
     if (enrollmentsResult.success && enrollmentsResult.data && enrollmentsResult.data.length > 0) {
       const activeEnrollment = enrollmentsResult.data[0];
-      const progressResult = await this.enrollmentService.getProgress(
-        fspOperatorId,
-        activeEnrollment.enrollmentId,
-      );
-      if (progressResult.success && progressResult.data) {
-        const p: FspEnrollmentProgress = progressResult.data;
-        enrollmentProgress = {
-          completedHours: p.completedHours ?? 0,
-          requiredHours: p.requiredHours ?? 0,
-        };
+      if (activeEnrollment) {
+        const progressResult = await this.enrollmentService.getProgress(
+          fspOperatorId,
+          activeEnrollment.enrollmentId,
+        );
+        if (progressResult.success && progressResult.data) {
+          const p: FspEnrollmentProgress = progressResult.data;
+          enrollmentProgress = {
+            completedHours: p.completedHours ?? 0,
+            requiredHours: p.requiredHours ?? 0,
+          };
+        }
       }
     }
 
@@ -426,7 +428,7 @@ export class WaitlistUseCaseService {
    * @param raw - Raw JSON value from the database `priorityWeights` column.
    * @returns A valid PriorityWeightConfig.
    */
-  private parsePriorityWeights(raw: unknown) {
+  private parsePriorityWeights(raw: unknown): ReturnType<PriorityWeightEngine['getDefaultConfig']> {
     try {
       if (typeof raw === 'object' && raw !== null) {
         return raw as ReturnType<PriorityWeightEngine['getDefaultConfig']>;

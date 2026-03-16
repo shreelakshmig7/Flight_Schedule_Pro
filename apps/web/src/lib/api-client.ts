@@ -7,11 +7,15 @@
  * All methods use the API_BASE_URL environment variable or default to http://localhost:3000.
  *
  * Key exports: fetchSuggestions, approveSuggestion, rejectSuggestion,
- *              bulkApproveSuggestions, bulkRejectSuggestions, fetchAuditEntries
+ *              bulkApproveSuggestions, bulkRejectSuggestions, fetchAuditEntries,
+ *              updatePriorityWeights, updatePolicy, updateNotificationConfig,
+ *              fetchDashboardMetrics
  *
  * Author: Agentic Scheduler Team
  * Project: Agentic Scheduler — FSP Integration
  * PR: PR-20 — Bulk Approve/Decline and Activity Feed
+ * Updated: PR-21 — Operator Configuration UI (added config endpoints)
+ * Updated: PR-24 — Operator Dashboard (added dashboard metrics endpoint)
  */
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
@@ -222,4 +226,172 @@ export async function fetchAuditEntries(
   const endpoint = `/audit${queryString ? `?${queryString}` : ''}`;
 
   return fetchApi<AuditEntriesResult>(endpoint);
+}
+
+/**
+ * Priority weight configuration type (matches shared-types).
+ */
+export interface PriorityWeightConfig {
+  timeSinceLastFlight: number;
+  timeUntilNextScheduledFlight: number;
+  totalFlightHours: number;
+  flightHoursHigherIsBetter: boolean;
+  customSignals: Record<string, number>;
+}
+
+/**
+ * Updates the priority weight configuration for the authenticated operator.
+ *
+ * @param weights - Partial priority weight update.
+ * @returns Promise resolving to the updated configuration.
+ */
+export async function updatePriorityWeights(
+  weights: Partial<PriorityWeightConfig>,
+): Promise<PriorityWeightConfig> {
+  return fetchApi<PriorityWeightConfig>('/operators/me/priority-weights', {
+    method: 'PUT',
+    body: JSON.stringify(weights),
+  });
+}
+
+/**
+ * Scheduling policy configuration type.
+ */
+export interface SchedulingPolicyConfig {
+  rescheduleWindowDays: number;
+  preferSameInstructor?: boolean;
+  preferContinuityInstructor?: boolean;
+  discoverySearchWindowDays?: number;
+  discoveryEligibleInstructorIds?: string[];
+  discoveryEligibleAircraftIds?: string[];
+}
+
+/**
+ * Updates the scheduling policy configuration for the authenticated operator.
+ *
+ * @param policy - Partial policy update.
+ * @returns Promise resolving to the updated configuration.
+ */
+export async function updatePolicy(
+  policy: Partial<SchedulingPolicyConfig>,
+): Promise<SchedulingPolicyConfig> {
+  return fetchApi<SchedulingPolicyConfig>('/operators/me/policy', {
+    method: 'PUT',
+    body: JSON.stringify(policy),
+  });
+}
+
+/**
+ * Email template configuration type.
+ */
+export interface EmailTemplate {
+  subject: string;
+  body: string;
+}
+
+/**
+ * SMS template configuration type.
+ */
+export interface SmsTemplate {
+  body: string;
+}
+
+/**
+ * Notification configuration type.
+ */
+export interface NotificationConfig {
+  emailTemplates?: Record<string, EmailTemplate>;
+  smsTemplates?: Record<string, SmsTemplate>;
+}
+
+/**
+ * Updates the notification configuration for the authenticated operator.
+ *
+ * @param config - Partial notification config update.
+ * @returns Promise resolving to the updated configuration.
+ */
+export async function updateNotificationConfig(
+  config: Partial<NotificationConfig>,
+): Promise<NotificationConfig> {
+  return fetchApi<NotificationConfig>('/operators/me/notification-config', {
+    method: 'PUT',
+    body: JSON.stringify(config),
+  });
+}
+
+// ── Dashboard Metrics ──────────────────────────────────────────────────────
+
+/**
+ * Sparkline data point for trend visualization
+ */
+export interface SparklinePoint {
+  value: number;
+  date: string;
+}
+
+/**
+ * Aircraft utilisation metric
+ */
+export interface CUtilMetric {
+  value: number;
+  trendPoints: SparklinePoint[];
+  unit: '%';
+}
+
+/**
+ * Acceptance rate metric
+ */
+export interface AcceptanceRateMetric {
+  value: number;
+  previousPeriod: number;
+  trendPoints: SparklinePoint[];
+  unit: '%';
+}
+
+/**
+ * Time to fill metric
+ */
+export interface TimeToFillMetric {
+  value: number;
+  trendPoints: SparklinePoint[];
+  unit: 'seconds';
+}
+
+/**
+ * Queue health metric showing counts by use case
+ */
+export interface QueueHealthMetric {
+  counts: Record<string, number>;
+  total: number;
+}
+
+/**
+ * Weekly flight hours metric
+ */
+export interface WeeklyFlightHoursMetric {
+  thisWeek: number;
+  previousWeek: number;
+  unit: 'hours';
+}
+
+/**
+ * Complete dashboard metrics response
+ */
+export interface DashboardMetrics {
+  cUtil: CUtilMetric;
+  acceptanceRate: AcceptanceRateMetric;
+  timeToFill: TimeToFillMetric;
+  queueHealth: QueueHealthMetric;
+  weeklyFlightHours: WeeklyFlightHoursMetric;
+  lastUpdated: string;
+}
+
+/**
+ * Fetches dashboard metrics for the authenticated operator.
+ * Metrics are cached server-side for 5 minutes.
+ *
+ * @returns Promise resolving to complete dashboard metrics.
+ */
+export async function fetchDashboardMetrics(): Promise<DashboardMetrics> {
+  return fetchApi<DashboardMetrics>('/dashboard/metrics');
 }

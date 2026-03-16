@@ -46,3 +46,9 @@ export * from './priority-weight.types';
 
 // PR-12: LLM Rationale Generator types
 export * from './llm.types';
+
+// PR-21: Operator Configuration UI types
+export * from './config.types';
+
+// PR-23: Azure Application Insights Integration types
+export * from './observability.types';

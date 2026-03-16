@@ -6,4 +6,5 @@ export default defineWorkspace([
   'packages/fsp-client/vitest.config.ts',
   'packages/shared-types/vitest.config.ts',
   'packages/database/vitest.config.ts',
+  'apps/web/vitest.config.ts',
 ]);

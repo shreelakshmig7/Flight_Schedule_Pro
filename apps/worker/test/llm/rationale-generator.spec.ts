@@ -78,7 +78,7 @@ const VALID_LLM_JSON = {
 };
 
 /** Build a mock Anthropic messages.create response from a raw text string. */
-function mockLlmResponse(text: string) {
+function mockLlmResponse(text: string): Record<string, unknown> {
   return {
     content: [{ type: 'text', text }],
     usage: { input_tokens: 120, output_tokens: 80 },

@@ -166,14 +166,15 @@ export class RescheduleUseCaseService {
 
     if (preferSameInstructor && instructorId) {
       // First attempt: same instructor preferred
-      slots = await this.fetchSlots(String(fspOperatorId), {
+      const req1: Omit<FspFindATimeRequest, 'startDate' | 'endDate'> & { startDate: string; endDate: string } = {
         studentId,
         durationMinutes,
         startDate,
         endDate,
-        activityTypeId,
         preferredInstructorIds: [instructorId],
-      });
+      };
+      if (activityTypeId !== undefined) req1.activityTypeId = activityTypeId;
+      slots = await this.fetchSlots(String(fspOperatorId), req1);
 
       if (slots.length === 0) {
         // Fallback: any eligible instructor
@@ -181,25 +182,27 @@ export class RescheduleUseCaseService {
           `instructor fallback: no slots found with instructor ${instructorId} — retrying without instructor preference`,
           { service: RescheduleUseCaseService.name, operatorId },
         );
-        slots = await this.fetchSlots(String(fspOperatorId), {
+        const req2: Omit<FspFindATimeRequest, 'startDate' | 'endDate'> & { startDate: string; endDate: string } = {
           studentId,
           durationMinutes,
           startDate,
           endDate,
-          activityTypeId,
-        });
+        };
+        if (activityTypeId !== undefined) req2.activityTypeId = activityTypeId;
+        slots = await this.fetchSlots(String(fspOperatorId), req2);
       }
     } else {
-      slots = await this.fetchSlots(String(fspOperatorId), {
+      const req3: Omit<FspFindATimeRequest, 'startDate' | 'endDate'> & { startDate: string; endDate: string } = {
         studentId,
         durationMinutes,
         startDate,
         endDate,
-        activityTypeId,
-        ...(preferSameInstructor && instructorId
-          ? { preferredInstructorIds: [instructorId] }
-          : {}),
-      });
+      };
+      if (activityTypeId !== undefined) req3.activityTypeId = activityTypeId;
+      if (preferSameInstructor && instructorId) {
+        req3.preferredInstructorIds = [instructorId];
+      }
+      slots = await this.fetchSlots(String(fspOperatorId), req3);
     }
 
     if (slots.length === 0) {
@@ -337,7 +340,7 @@ export class RescheduleUseCaseService {
               durationMinutes,
               validateRequest,
               constraintResults,
-            } as Prisma.InputJsonValue,
+            } as unknown as Prisma.InputJsonValue,
             llmResponse: rationale.rationale,
             llmModel: 'claude-opus-4-6',
             expiresAt,

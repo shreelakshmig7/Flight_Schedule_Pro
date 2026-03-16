@@ -19,7 +19,7 @@
  */
 
 import 'reflect-metadata';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { RescheduleUseCaseService } from '../../src/use-cases/reschedule/reschedule-use-case.service';
 import type { ChangeEventMessage } from '@fsp-scheduler/shared-types';
 
@@ -54,7 +54,7 @@ const THREE_SLOTS = [
   { startDateTime: '2025-10-18T14:00:00Z', endDateTime: '2025-10-18T16:00:00Z', instructorId: 'usr-instr-001' },
 ];
 
-const makeTwilight = (date: string) => ({
+const makeTwilight = (date: string): Record<string, string> => ({
   locationId: 'loc-001',
   date,
   civilTwilightBegin: `${date}T06:00:00Z`,
@@ -76,7 +76,7 @@ function makeService(overrides: {
   available?: boolean;
   validateSuccess?: boolean;
   civilTwilight?: Record<string, ReturnType<typeof makeTwilight>> | null;
-} = {}) {
+} = {}): Record<string, unknown> {
   const {
     slots = THREE_SLOTS,
     sameInstructorSlots,
@@ -348,7 +348,7 @@ describe('RescheduleUseCaseService', () => {
         expect.objectContaining({ preferredInstructorIds: ['usr-instr-001'] }),
       );
       // Second call (fallback) does not have preferredInstructorIds
-      const secondCallArgs = (findATimeService.getAvailableSlots as ReturnType<typeof vi.fn>).mock.calls[1][1] as Record<string, unknown>;
+      const secondCallArgs = findATimeService.getAvailableSlots.mock.calls[1][1] as Record<string, unknown>;
       expect(secondCallArgs).not.toHaveProperty('preferredInstructorIds');
     });
 
@@ -373,7 +373,8 @@ describe('RescheduleUseCaseService', () => {
         sameInstructorSlots: [],
         slots: THREE_SLOTS,
       });
-      const warnSpy = vi.spyOn((service as unknown as { logger: { warn: (...a: unknown[]) => void } }).logger, 'warn');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const warnSpy = vi.spyOn((service as any).logger, 'warn');
 
       await service.processCancellation(BASE_EVENT);
 
@@ -387,7 +388,8 @@ describe('RescheduleUseCaseService', () => {
   describe('fsp-032: no alternative slots found', () => {
     it('logs "no slots found" when FindATimeService returns empty array', async () => {
       const { service } = makeService({ slots: [] });
-      const warnSpy = vi.spyOn((service as unknown as { logger: { warn: (...a: unknown[]) => void } }).logger, 'warn');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const warnSpy = vi.spyOn((service as any).logger, 'warn');
 
       await service.processCancellation(BASE_EVENT);
 
@@ -397,7 +399,8 @@ describe('RescheduleUseCaseService', () => {
 
     it('logs "no suggestions created" when no slots available', async () => {
       const { service } = makeService({ slots: [] });
-      const warnSpy = vi.spyOn((service as unknown as { logger: { warn: (...a: unknown[]) => void } }).logger, 'warn');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const warnSpy = vi.spyOn((service as any).logger, 'warn');
 
       await service.processCancellation(BASE_EVENT);
 
@@ -628,7 +631,7 @@ describe('RescheduleUseCaseService', () => {
       await service.processCancellation(BASE_EVENT);
 
       // Default preferSameInstructor=false → no preferredInstructorIds in call
-      const callArgs = (findATimeService.getAvailableSlots as ReturnType<typeof vi.fn>).mock.calls[0][1] as Record<string, unknown>;
+      const callArgs = findATimeService.getAvailableSlots.mock.calls[0][1] as Record<string, unknown>;
       expect(callArgs).not.toHaveProperty('preferredInstructorIds');
     });
   });

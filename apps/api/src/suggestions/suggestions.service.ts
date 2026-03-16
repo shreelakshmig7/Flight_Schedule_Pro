@@ -32,7 +32,6 @@ import { PrismaService, Prisma } from '@fsp-scheduler/database';
 import { ReservationsService } from '@fsp-scheduler/fsp-client';
 import {
   SUGGESTION_STATUS,
-  QUEUE_NAMES,
 } from '@fsp-scheduler/shared-types';
 import type {
   TenantContextData,
