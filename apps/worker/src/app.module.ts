@@ -18,7 +18,7 @@
  * Updated: PR-9 — Change Detection Engine (added ChangeDetectionModule)
  * Updated: PR-11 — Priority Weight Engine (added SuggestionsModule)
  * Updated: PR-12 — LLM Rationale Generator (added LlmModule)
- * Updated: PR-13 — Use Case A Waitlist (added WaitlistModule)
+ * Updated: PR-14 — Use Case B Reschedule (replaced WaitlistModule with UseCasesModule)
  */
 
 import { Module } from '@nestjs/common';
@@ -31,7 +31,7 @@ import { PollingModule } from './polling/polling.module';
 import { ChangeDetectionModule } from './change-detection/change-detection.module';
 import { SuggestionsModule } from './suggestions/suggestions.module';
 import { LlmModule } from './llm/llm.module';
-import { WaitlistModule } from './use-cases/waitlist/waitlist.module';
+import { UseCasesModule } from './use-cases/use-cases.module';
 
 @Module({
   imports: [
@@ -44,7 +44,7 @@ import { WaitlistModule } from './use-cases/waitlist/waitlist.module';
     ChangeDetectionModule,
     SuggestionsModule,
     LlmModule,
-    WaitlistModule,
+    UseCasesModule,
   ],
   controllers: [],
   providers: [],

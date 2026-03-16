@@ -350,6 +350,35 @@ export const WAITLIST_RESERVATION_LOOKBACK_DAYS = 365;
  */
 export const WAITLIST_RESERVATION_LOOKAHEAD_DAYS = 90;
 
+// ── Use Case B — Reschedule constants ────────────────────────────────────────
+
+/**
+ * Maximum number of PENDING suggestions to create per CANCELLATION event.
+ * Each suggestion represents an alternative scheduling slot for the student.
+ */
+export const RESCHEDULE_MAX_SUGGESTIONS = 3;
+
+/**
+ * Number of calendar days ahead to search for alternative slots when
+ * rescheduling a cancelled reservation.
+ */
+export const RESCHEDULE_SEARCH_WINDOW_DAYS = 30;
+
+/**
+ * Default operator rescheduling policy applied when an operator has not
+ * stored a custom policyConfig in the database.
+ */
+export const RESCHEDULE_DEFAULT_POLICY_CONFIG = {
+  /** When true, the agent first attempts slots with the original instructor. */
+  preferSameInstructor: false,
+} as const;
+
+/**
+ * Default duration in minutes used when originalStart/End are absent from
+ * the CANCELLATION event rawDiff.
+ */
+export const RESCHEDULE_DEFAULT_DURATION_MINUTES = 60;
+
 /**
  * Default priority weight configuration applied when an operator has not
  * stored a custom configuration. Weights are non-negative and will be

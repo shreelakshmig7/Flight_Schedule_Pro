@@ -36,6 +36,9 @@ model Operator {
   lastPollHash  String?
   /// Operator-configured priority weight signals (JSON). Null → engine uses DEFAULT_PRIORITY_WEIGHTS.
   priorityWeights Json?
+  /// Operator scheduling policy (JSON). Null → RESCHEDULE_DEFAULT_POLICY_CONFIG applies.
+  /// Shape: { preferSameInstructor?: boolean }
+  policyConfig    Json?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
