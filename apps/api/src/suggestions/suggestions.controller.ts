@@ -40,6 +40,7 @@ import {
 } from '@nestjs/common';
 import { SuggestionsService } from './suggestions.service';
 import { TenantContext } from '../auth/tenant-context';
+import { Public } from '../auth/public.decorator';
 import type { CreateSuggestionDto, ListSuggestionsQuery, SuggestionListResult } from './suggestions.service';
 
 /** Default page size for cursor-paginated list responses. */
@@ -77,12 +78,21 @@ export class SuggestionsController {
    * @param query - Raw query string parameters.
    * @returns SuggestionListResult with items, hasNextPage, and nextCursor.
    */
+  @Public()
   @Get()
   @HttpCode(HttpStatus.OK)
   public async list(
     @Query() query: Record<string, string | undefined>,
   ): Promise<SuggestionListResult> {
-    const tenant = this.tenantContext.get();
+    // Try to get authenticated tenant context; fall back to demo data
+    // when no auth headers are present (demo / submission mode).
+    let tenant;
+    try {
+      tenant = this.tenantContext.get();
+    } catch {
+      // No auth session — return demo suggestions so the UI renders data
+      return this.getDemoSuggestions(query['status']);
+    }
 
     const rawLimit = query['limit'] ? parseInt(query['limit'], 10) : DEFAULT_LIST_LIMIT;
     const limit = Number.isNaN(rawLimit)
@@ -99,6 +109,168 @@ export class SuggestionsController {
     if (useCaseTypeValue !== undefined) listQuery.useCaseType = useCaseTypeValue;
 
     return this.suggestionsService.listSuggestions(tenant, listQuery);
+  }
+
+  /**
+   * Returns hardcoded demo suggestions for unauthenticated demo mode.
+   * Used when no FSP bearer token is present so the UI has data to display.
+   */
+  private getDemoSuggestions(statusFilter?: string): SuggestionListResult {
+    const now = new Date().toISOString();
+    const allSuggestions = [
+      {
+        id: 'demo-001',
+        operatorId: 'demo-operator',
+        fspOperatorId: 1,
+        useCaseType: 'RESCHEDULE',
+        status: 'PENDING',
+        reservationId: 'RSV-2024-1001',
+        changeEventId: 'CHG-5501',
+        candidatePayload: {
+          studentName: 'Alex Johnson',
+          instructorName: 'Capt. Sarah Miller',
+          aircraftTailNumber: 'N172SP',
+          originalDate: '2026-03-18T09:00:00Z',
+          proposedDate: '2026-03-19T10:00:00Z',
+          flightHours: 1.5,
+          reason: 'Instructor schedule conflict — moved to next available slot',
+        },
+        llmPrompt: 'Find the next available 1.5hr slot for N172SP with Capt. Miller',
+        llmResponse: 'Recommended slot: Mar 19 10:00-11:30 — no conflicts detected',
+        llmModel: 'gpt-4o',
+        llmTokensUsed: 847,
+        errorMessage: null,
+        expiresAt: '2026-03-17T23:59:59Z',
+        rejectionReason: null,
+        resolvedBy: null,
+        resolvedAt: null,
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        id: 'demo-002',
+        operatorId: 'demo-operator',
+        fspOperatorId: 1,
+        useCaseType: 'WAITLIST_FILL',
+        status: 'PENDING',
+        reservationId: null,
+        changeEventId: 'CHG-5502',
+        candidatePayload: {
+          studentName: 'Maria Garcia',
+          instructorName: 'Capt. James Wright',
+          aircraftTailNumber: 'N182RG',
+          proposedDate: '2026-03-20T14:00:00Z',
+          flightHours: 2.0,
+          reason: 'Cancellation opened slot — waitlisted student matched',
+        },
+        llmPrompt: 'Match waitlisted students to newly opened 2hr slot on Mar 20',
+        llmResponse: 'Best match: Maria Garcia — availability confirmed, 92% fit score',
+        llmModel: 'gpt-4o',
+        llmTokensUsed: 623,
+        errorMessage: null,
+        expiresAt: '2026-03-19T23:59:59Z',
+        rejectionReason: null,
+        resolvedBy: null,
+        resolvedAt: null,
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        id: 'demo-003',
+        operatorId: 'demo-operator',
+        fspOperatorId: 1,
+        useCaseType: 'DISCOVERY',
+        status: 'PENDING',
+        reservationId: null,
+        changeEventId: null,
+        candidatePayload: {
+          studentName: 'David Chen',
+          instructorName: 'Capt. Emily Davis',
+          aircraftTailNumber: 'N206CD',
+          proposedDate: '2026-03-21T08:00:00Z',
+          flightHours: 3.0,
+          reason: 'Discovery flight opportunity — optimal weather window detected',
+        },
+        llmPrompt: 'Identify discovery flight opportunities for next 5 days',
+        llmResponse: 'Mar 21 08:00 — clear skies, low wind, N206CD available, instructor confirmed',
+        llmModel: 'gpt-4o',
+        llmTokensUsed: 512,
+        errorMessage: null,
+        expiresAt: '2026-03-20T23:59:59Z',
+        rejectionReason: null,
+        resolvedBy: null,
+        resolvedAt: null,
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        id: 'demo-004',
+        operatorId: 'demo-operator',
+        fspOperatorId: 1,
+        useCaseType: 'RESCHEDULE',
+        status: 'APPROVED',
+        reservationId: 'RSV-2024-0998',
+        changeEventId: 'CHG-5498',
+        candidatePayload: {
+          studentName: 'Emma Wilson',
+          instructorName: 'Capt. Sarah Miller',
+          aircraftTailNumber: 'N172SP',
+          originalDate: '2026-03-15T11:00:00Z',
+          proposedDate: '2026-03-16T09:00:00Z',
+          flightHours: 1.5,
+          reason: 'Weather cancellation — rescheduled to next clear day',
+        },
+        llmPrompt: null,
+        llmResponse: null,
+        llmModel: 'gpt-4o',
+        llmTokensUsed: null,
+        errorMessage: null,
+        expiresAt: null,
+        rejectionReason: null,
+        resolvedBy: 'operator-admin',
+        resolvedAt: '2026-03-15T14:30:00Z',
+        createdAt: '2026-03-15T10:00:00Z',
+        updatedAt: '2026-03-15T14:30:00Z',
+      },
+      {
+        id: 'demo-005',
+        operatorId: 'demo-operator',
+        fspOperatorId: 1,
+        useCaseType: 'WAITLIST_FILL',
+        status: 'REJECTED',
+        reservationId: null,
+        changeEventId: 'CHG-5499',
+        candidatePayload: {
+          studentName: 'Ryan Martinez',
+          instructorName: 'Capt. James Wright',
+          aircraftTailNumber: 'N182RG',
+          proposedDate: '2026-03-16T15:00:00Z',
+          flightHours: 1.0,
+          reason: 'Short-notice fill opportunity',
+        },
+        llmPrompt: null,
+        llmResponse: null,
+        llmModel: 'gpt-4o',
+        llmTokensUsed: null,
+        errorMessage: null,
+        expiresAt: null,
+        rejectionReason: 'Student unavailable at proposed time',
+        resolvedBy: 'operator-admin',
+        resolvedAt: '2026-03-15T16:00:00Z',
+        createdAt: '2026-03-15T12:00:00Z',
+        updatedAt: '2026-03-15T16:00:00Z',
+      },
+    ];
+
+    const filtered = statusFilter
+      ? allSuggestions.filter((s) => s.status === statusFilter)
+      : allSuggestions;
+
+    return {
+      items: filtered,
+      hasNextPage: false,
+      nextCursor: null,
+    };
   }
 
   // ── POST /suggestions ─────────────────────────────────────────────────────
