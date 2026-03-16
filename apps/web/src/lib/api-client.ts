@@ -18,10 +18,11 @@
  * Updated: PR-24 — Operator Dashboard (added dashboard metrics endpoint)
  */
 
-// Use the /api-proxy path which is rewritten server-side by next.config.js rewrites().
-// The actual API destination is controlled by the API_BASE_URL runtime env var —
-// it is never baked into the JS bundle, so the container image works in any environment.
-const API_BASE_URL = '/api-proxy';
+// Use the /api/proxy route handler which reads API_BASE_URL at request time.
+// Unlike next.config.js rewrites() (baked into routes-manifest.json at build time),
+// a Next.js Route Handler evaluates process.env at runtime, so the container image
+// works in any environment without a rebuild.
+const API_BASE_URL = '/api/proxy';
 
 /**
  * Generic fetch wrapper that handles JSON responses and errors.
