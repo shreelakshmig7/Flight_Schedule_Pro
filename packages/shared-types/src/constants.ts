@@ -65,13 +65,26 @@ export const SERVICE_BUS_NAMESPACE_ENV_KEY = 'AZURE_SERVICE_BUS_NAMESPACE';
 /**
  * Possible lifecycle states for a Suggestion entity.
  * Maps 1-to-1 with the `status` column in the `suggestions` table.
+ *
+ * State machine transitions (enforced at application layer):
+ *   PENDING  → APPROVED  (operator approves; FSP validateOnly must pass)
+ *   PENDING  → REJECTED  (operator manually rejects)
+ *   PENDING  → EXPIRED   (expiry cron runs; expiresAt < now)
+ *   APPROVED → CREATED   (use-case handler executes FSP reservation creation)
+ *   CREATED  → SENT      (communication handler sends notification)
+ *   SENT     → ACCEPTED  (guest/staff accepts the suggestion)
+ *   *        → FAILED    (any terminal failure in the pipeline)
  */
 export const SUGGESTION_STATUS = {
   PENDING: 'PENDING',
+  /** Operator approved; FSP validateOnly passed; waiting for use-case handler execution. */
+  APPROVED: 'APPROVED',
   CREATED: 'CREATED',
   SENT: 'SENT',
   ACCEPTED: 'ACCEPTED',
   REJECTED: 'REJECTED',
+  /** Suggestion was not actioned before its expiresAt timestamp. */
+  EXPIRED: 'EXPIRED',
   FAILED: 'FAILED',
 } as const;
 

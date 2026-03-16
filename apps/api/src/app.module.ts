@@ -15,6 +15,7 @@
  * Updated: PR-5 — Prisma Schema and Database Migrations (added DatabaseModule)
  * Updated: PR-7 — Authentication and Multi-Tenant Middleware (added AuthModule,
  *           OperatorsModule, FspClientModule, APP_GUARD)
+ * Updated: PR-10 — Suggestion State Machine (added SuggestionsModule)
  */
 
 import { Module } from '@nestjs/common';
@@ -25,6 +26,7 @@ import { HealthController } from './health/health.controller';
 import { AuthModule } from './auth/auth.module';
 import { FspAuthGuard } from './auth/fsp-auth.guard';
 import { OperatorsModule } from './operators/operators.module';
+import { SuggestionsModule } from './suggestions/suggestions.module';
 
 @Module({
   imports: [
@@ -32,6 +34,7 @@ import { OperatorsModule } from './operators/operators.module';
     FspClientModule,
     AuthModule,
     OperatorsModule,
+    SuggestionsModule,
   ],
   controllers: [HealthController],
   providers: [

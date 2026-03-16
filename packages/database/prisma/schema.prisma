@@ -54,15 +54,25 @@ model Suggestion {
   fspOperatorId Int
   /// Use-case type: CANCELLATION_FILL | NEW_OPENING | WAITLIST_FILL
   useCaseType   String
-  /// Lifecycle status: PENDING | CREATED | SENT | ACCEPTED | REJECTED | FAILED
+  /// Lifecycle status: PENDING | APPROVED | CREATED | SENT | ACCEPTED | REJECTED | EXPIRED | FAILED
   status        String
   reservationId  String?
   changeEventId  String?
+  /// JSON payload stored at generation time for FSP validateOnly and execution calls
+  candidatePayload Json?
   llmPrompt     String?  @db.Text
   llmResponse   String?  @db.Text
   llmModel      String?
   llmTokensUsed Int?
   errorMessage  String?
+  /// ISO timestamp after which a PENDING suggestion automatically expires
+  expiresAt     DateTime?
+  /// Human-readable reason supplied when an operator rejects a suggestion
+  rejectionReason String?
+  /// userId of the operator who approved or rejected this suggestion
+  resolvedBy    String?
+  /// Timestamp when the suggestion was approved or rejected
+  resolvedAt    DateTime?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -71,6 +81,8 @@ model Suggestion {
 
   @@index([operatorId, status])
   @@index([operatorId, useCaseType])
+  @@index([operatorId, createdAt])
+  @@index([status, expiresAt])
   @@map("suggestions")
 }
 
