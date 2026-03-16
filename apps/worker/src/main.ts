@@ -24,7 +24,6 @@ import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify
 import { Logger } from '@nestjs/common';
 import { AppModule } from './app.module';
 
-const WORKER_PORT_DEFAULT = 3001;
 /** Disjoint from API (3000, 3003–3009) and web (3002, 3017–3023) so parallel dev never collides. */
 const WORKER_PORT_CANDIDATES = [3001, 3010, 3011, 3012, 3013, 3014, 3015, 3016];
 
