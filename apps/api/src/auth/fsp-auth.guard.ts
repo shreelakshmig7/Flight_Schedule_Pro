@@ -85,6 +85,18 @@ export class FspAuthGuard implements CanActivate {
       return true;
     }
 
+    // Wrap in try/catch so dependency resolution or unexpected errors
+    // result in 403 Forbidden instead of 500 Internal Server Error.
+    try {
+      return await this.doActivate(context);
+    } catch (err) {
+      this.logger.error('Unexpected error in auth guard', err instanceof Error ? err.stack : String(err));
+      return false;
+    }
+  }
+
+  /** Core activation logic, extracted for error-boundary wrapping. */
+  private async doActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<FastifyRequest>();
     const headers = toHeaderRecord(request.headers);
 
