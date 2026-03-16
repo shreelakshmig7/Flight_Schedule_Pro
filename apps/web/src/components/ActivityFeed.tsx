@@ -254,9 +254,6 @@ export function ActivityFeed({ isOpen, onClose }: ActivityFeedProps): JSX.Elemen
               borderBottom: '1px solid var(--color-border)',
               cursor: 'pointer',
               transition: 'background-color 0.2s',
-              ':hover': {
-                backgroundColor: 'var(--color-bg-secondary)',
-              },
             }}
           >
             <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
