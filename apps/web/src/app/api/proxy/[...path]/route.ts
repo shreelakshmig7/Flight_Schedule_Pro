@@ -51,14 +51,19 @@ async function proxy(request: NextRequest, path: string[]): Promise<NextResponse
     }
   });
 
-  const hasBody = request.method !== 'GET' && request.method !== 'HEAD';
-  const body = hasBody ? await request.text() : undefined;
-
-  const upstream = await fetch(upstreamUrl, {
+  // Build fetch options — only include body for methods that carry one.
+  // We use a conditional spread rather than `body: undefined` because
+  // exactOptionalPropertyTypes:true makes `undefined` not assignable to
+  // `BodyInit | null` (the type of RequestInit.body).
+  const fetchOptions: RequestInit = {
     method: request.method,
     headers: forwardHeaders,
-    body,
-  });
+    ...(request.method !== 'GET' && request.method !== 'HEAD'
+      ? { body: await request.text() }
+      : {}),
+  };
+
+  const upstream = await fetch(upstreamUrl, fetchOptions);
 
   // Forward all safe response headers.
   const resHeaders: Record<string, string> = {};
