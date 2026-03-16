@@ -18,7 +18,10 @@
  * Updated: PR-24 — Operator Dashboard (added dashboard metrics endpoint)
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
+// Use the /api-proxy path which is rewritten server-side by next.config.js rewrites().
+// The actual API destination is controlled by the API_BASE_URL runtime env var —
+// it is never baked into the JS bundle, so the container image works in any environment.
+const API_BASE_URL = '/api-proxy';
 
 /**
  * Generic fetch wrapper that handles JSON responses and errors.

@@ -6,6 +6,19 @@ const nextConfig = {
   output: 'standalone',
   // Transpile shared workspace packages
   transpilePackages: ['@fsp-scheduler/shared-types'],
+  // Proxy /api-proxy/* → API_BASE_URL/* at runtime (server-side rewrite).
+  // This avoids baking the API URL into the JS bundle at build time.
+  // Client code uses the relative path /api-proxy; the server reads API_BASE_URL
+  // from the environment at startup, so it can be changed via container env vars.
+  async rewrites() {
+    const apiBase = process.env.API_BASE_URL || 'http://localhost:3000';
+    return [
+      {
+        source: '/api-proxy/:path*',
+        destination: `${apiBase}/:path*`,
+      },
+    ];
+  },
   // Security headers
   async headers() {
     return [
