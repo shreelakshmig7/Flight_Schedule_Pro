@@ -1,0 +1,321 @@
+PR-7 Authentication and Multi-Tenant Middleware — Test Results
+Date: 2026-03-15
+==================================================
+
+=== apps/api tests ===
+
+> @fsp-scheduler/api@0.1.0 test
+> vitest run
+
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/shreelakshmigopinatharao/Flight_Schedule_Pro/apps/api
+
+ ✓ test/tenant-context.spec.ts (3 tests) 1ms
+ ✓ test/operators.controller.spec.ts (4 tests) 3ms
+[33m[Nest] 20140  - [39m03/15/2026, 5:00:43 PM [33m   WARN[39m [38;5;3m[FspAuthGuard] [39m[33mMissing Authorization header[39m
+[33m[Nest] 20140  - [39m03/15/2026, 5:00:43 PM [33m   WARN[39m [38;5;3m[FspAuthGuard] [39m[33mAuthorization header is not a Bearer token[39m
+[33m[Nest] 20140  - [39m03/15/2026, 5:00:43 PM [33m   WARN[39m [38;5;3m[FspAuthGuard] [39m[33mMissing x-operator-id header[39m
+[33m[Nest] 20140  - [39m03/15/2026, 5:00:43 PM [33m   WARN[39m [38;5;3m[FspAuthGuard] [39m[33mInvalid x-operator-id header value: not-a-number[39m
+[33m[Nest] 20140  - [39m03/15/2026, 5:00:43 PM [33m   WARN[39m [38;5;3m[FspAuthGuard] [39m[33mFSP permission check failed: Unauthorized[39m
+[33m[Nest] 20140  - [39m03/15/2026, 5:00:43 PM [33m   WARN[39m [38;5;3m[FspAuthGuard] [39m[33mOperator 42 does not have canManageSchedule permission[39m
+[33m[Nest] 20140  - [39m03/15/2026, 5:00:43 PM [33m   WARN[39m [38;5;3m[FspAuthGuard] [39m[33mOperator fspOperatorId=42 not found in DB — bootstrap required[39m
+ ✓ test/fsp-auth.guard.spec.ts (10 tests) 3ms
+ ✓ test/health.spec.ts (1 test) 20ms
+
+ Test Files  4 passed (4)
+      Tests  18 passed (18)
+   Start at  17:00:42
+   Duration  554ms (transform 160ms, setup 138ms, collect 907ms, tests 27ms, environment 0ms, prepare 203ms)
+
+
+=== apps/worker tests ===
+
+> @fsp-scheduler/worker@0.1.0 test
+> vitest run
+
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/shreelakshmigopinatharao/Flight_Schedule_Pro/apps/worker
+
+[95m[Nest] 20179  - [39m03/15/2026, 5:00:43 PM [95m  DEBUG[39m [38;5;3m[TokenStore] [39m[95mToken stored for fspOperatorId=42 expires=2026-03-15T23:00:43.959Z[39m
+[95m[Nest] 20179  - [39m03/15/2026, 5:00:43 PM [95m  DEBUG[39m [38;5;3m[TokenStore] [39m[95mToken stored for fspOperatorId=42 expires=2026-03-15T23:00:43.963Z[39m
+[95m[Nest] 20179  - [39m03/15/2026, 5:00:43 PM [95m  DEBUG[39m [38;5;3m[TokenStore] [39m[95mToken stored for fspOperatorId=42 expires=2026-03-15T23:00:43.963Z[39m
+[95m[Nest] 20179  - [39m03/15/2026, 5:00:43 PM [95m  DEBUG[39m [38;5;3m[TokenStore] [39m[95mToken stored for fspOperatorId=42 expires=2026-03-15T22:00:42.963Z[39m
+[95m[Nest] 20179  - [39m03/15/2026, 5:00:43 PM [95m  DEBUG[39m [38;5;3m[TokenStore] [39m[95mToken for fspOperatorId=42 has expired[39m
+[95m[Nest] 20179  - [39m03/15/2026, 5:00:43 PM [95m  DEBUG[39m [38;5;3m[TokenStore] [39m[95mToken stored for fspOperatorId=42 expires=2026-03-15T22:30:43.963Z[39m
+[95m[Nest] 20179  - [39m03/15/2026, 5:00:43 PM [95m  DEBUG[39m [38;5;3m[TokenStore] [39m[95mToken stored for fspOperatorId=42 expires=2026-03-15T22:04:43.963Z[39m
+[95m[Nest] 20179  - [39m03/15/2026, 5:00:43 PM [95m  DEBUG[39m [38;5;3m[TokenStore] [39m[95mToken stored for fspOperatorId=42 expires=2026-03-15T22:00:42.963Z[39m
+[95m[Nest] 20179  - [39m03/15/2026, 5:00:43 PM [95m  DEBUG[39m [38;5;3m[TokenStore] [39m[95mToken stored for fspOperatorId=42 expires=2026-03-15T22:05:43.963Z[39m
+[95m[Nest] 20179  - [39m03/15/2026, 5:00:43 PM [95m  DEBUG[39m [38;5;3m[TokenStore] [39m[95mToken stored for fspOperatorId=1 expires=2026-03-15T23:00:43.964Z[39m
+[95m[Nest] 20179  - [39m03/15/2026, 5:00:43 PM [95m  DEBUG[39m [38;5;3m[TokenStore] [39m[95mToken stored for fspOperatorId=2 expires=2026-03-15T23:00:43.964Z[39m
+[95m[Nest] 20179  - [39m03/15/2026, 5:00:43 PM [95m  DEBUG[39m [38;5;3m[TokenStore] [39m[95mToken stored for fspOperatorId=3 expires=2026-03-15T23:00:43.964Z[39m
+ ✓ test/token-store.spec.ts (11 tests) 6ms
+[32m[Nest] 20183  - [39m03/15/2026, 5:00:44 PM [32m    LOG[39m [38;5;3m[SuggestionResultPublisher] [39m[32mPublishing SuggestionResultMessage[39m
+[32m[Nest] 20183  - [39m03/15/2026, 5:00:44 PM [32m    LOG[39m [38;5;3m[SuggestionResultPublisher] [39m[32mObject:[39m
+{
+  "service": "SuggestionResultPublisher",
+  "operatorId": "op-003",
+  "correlationId": "corr-003",
+  "queue": "suggestion-results",
+  "suggestionId": "sug-100",
+  "status": "CREATED"
+}
+
+[32m[Nest] 20183  - [39m03/15/2026, 5:00:44 PM [32m    LOG[39m [38;5;3m[SuggestionResultPublisher] [39m[32mPublishing SuggestionResultMessage[39m
+[32m[Nest] 20183  - [39m03/15/2026, 5:00:44 PM [32m    LOG[39m [38;5;3m[SuggestionResultPublisher] [39m[32mObject:[39m
+{
+  "service": "SuggestionResultPublisher",
+  "operatorId": "op-003",
+  "correlationId": "corr-003",
+  "queue": "suggestion-results",
+  "suggestionId": "sug-100",
+  "status": "CREATED"
+}
+
+[32m[Nest] 20182  - [39m03/15/2026, 5:00:44 PM [32m    LOG[39m [38;5;3m[PollJobPublisher] [39m[32mPublishing PollJobMessage[39m
+[32m[Nest] 20182  - [39m03/15/2026, 5:00:44 PM [32m    LOG[39m [38;5;3m[PollJobPublisher] [39m[32mObject:[39m
+{
+  "service": "PollJobPublisher",
+  "operatorId": "op-001",
+  "correlationId": "corr-001",
+  "queue": "poll-jobs"
+}
+
+ ✓ test/service-bus/publishers/suggestion-result.publisher.spec.ts (2 tests) 4ms
+[32m[Nest] 20182  - [39m03/15/2026, 5:00:44 PM [32m    LOG[39m [38;5;3m[PollJobPublisher] [39m[32mPublishing PollJobMessage[39m
+[32m[Nest] 20182  - [39m03/15/2026, 5:00:44 PM [32m    LOG[39m [38;5;3m[PollJobPublisher] [39m[32mObject:[39m
+{
+  "service": "PollJobPublisher",
+  "operatorId": "op-001",
+  "correlationId": "corr-001",
+  "queue": "poll-jobs"
+}
+
+ ✓ test/service-bus/publishers/poll-job.publisher.spec.ts (3 tests) 5ms
+[32m[Nest] 20184  - [39m03/15/2026, 5:00:44 PM [32m    LOG[39m [38;5;3m[ChangeEventPublisher] [39m[32mPublishing ChangeEventMessage[39m
+[32m[Nest] 20184  - [39m03/15/2026, 5:00:44 PM [32m    LOG[39m [38;5;3m[ChangeEventPublisher] [39m[32mObject:[39m
+{
+  "service": "ChangeEventPublisher",
+  "operatorId": "op-002",
+  "correlationId": "corr-002",
+  "queue": "change-events",
+  "changeType": "NEW_OPENING",
+  "reservationId": "res-456"
+}
+
+[32m[Nest] 20184  - [39m03/15/2026, 5:00:44 PM [32m    LOG[39m [38;5;3m[ChangeEventPublisher] [39m[32mPublishing ChangeEventMessage[39m
+[32m[Nest] 20184  - [39m03/15/2026, 5:00:44 PM [32m    LOG[39m [38;5;3m[ChangeEventPublisher] [39m[32mObject:[39m
+{
+  "service": "ChangeEventPublisher",
+  "operatorId": "op-002",
+  "correlationId": "corr-002",
+  "queue": "change-events",
+  "changeType": "NEW_OPENING",
+  "reservationId": "res-456"
+}
+
+ ✓ test/service-bus/publishers/change-event.publisher.spec.ts (2 tests) 2ms
+[32m[Nest] 20178  - [39m03/15/2026, 5:00:44 PM [32m    LOG[39m [38;5;3m[DeadLetterHandler] [39m[32mStarting dead-letter sweep[39m
+[32m[Nest] 20178  - [39m03/15/2026, 5:00:44 PM [32m    LOG[39m [38;5;3m[DeadLetterHandler] [39m[32mObject:[39m
+{
+  "service": "DeadLetterHandler",
+  "operatorId": "system",
+  "correlationId": "dlq-sweep"
+}
+
+[33m[Nest] 20178  - [39m03/15/2026, 5:00:44 PM [33m   WARN[39m [38;5;3m[DeadLetterHandler] [39m[33mDead-lettered message found[39m
+[33m[Nest] 20178  - [39m03/15/2026, 5:00:44 PM [33m   WARN[39m [38;5;3m[DeadLetterHandler] [39m[33mObject:[39m
+{
+  "service": "DeadLetterHandler",
+  "operatorId": "op-1",
+  "correlationId": "corr-1",
+  "queue": "poll-jobs"
+}
+
+[33m[Nest] 20178  - [39m03/15/2026, 5:00:44 PM [33m   WARN[39m [38;5;3m[DeadLetterHandler] [39m[33mDead-lettered message found[39m
+[33m[Nest] 20178  - [39m03/15/2026, 5:00:44 PM [33m   WARN[39m [38;5;3m[DeadLetterHandler] [39m[33mObject:[39m
+{
+  "service": "DeadLetterHandler",
+  "operatorId": "op-2",
+  "correlationId": "corr-2",
+  "queue": "change-events"
+}
+
+[33m[Nest] 20178  - [39m03/15/2026, 5:00:44 PM [33m   WARN[39m [38;5;3m[DeadLetterHandler] [39m[33mDead-lettered message found[39m
+[33m[Nest] 20178  - [39m03/15/2026, 5:00:44 PM [33m   WARN[39m [38;5;3m[DeadLetterHandler] [39m[33mObject:[39m
+{
+  "service": "DeadLetterHandler",
+  "operatorId": "op-3",
+  "correlationId": "corr-3",
+  "queue": "suggestion-results"
+}
+
+[32m[Nest] 20178  - [39m03/15/2026, 5:00:44 PM [32m    LOG[39m [38;5;3m[DeadLetterHandler] [39m[32mDead-letter sweep complete[39m
+[32m[Nest] 20178  - [39m03/15/2026, 5:00:44 PM [32m    LOG[39m [38;5;3m[DeadLetterHandler] [39m[32mObject:[39m
+{
+  "service": "DeadLetterHandler",
+  "operatorId": "system",
+  "correlationId": "dlq-sweep"
+}
+
+[32m[Nest] 20178  - [39m03/15/2026, 5:00:44 PM [32m    LOG[39m [38;5;3m[DeadLetterHandler] [39m[32mStarting dead-letter sweep[39m
+[32m[Nest] 20178  - [39m03/15/2026, 5:00:44 PM [32m    LOG[39m [38;5;3m[DeadLetterHandler] [39m[32mObject:[39m
+{
+  "service": "DeadLetterHandler",
+  "operatorId": "system",
+  "correlationId": "dlq-sweep"
+}
+
+[33m[Nest] 20178  - [39m03/15/2026, 5:00:44 PM [33m   WARN[39m [38;5;3m[DeadLetterHandler] [39m[33mDead-lettered message found[39m
+[33m[Nest] 20178  - [39m03/15/2026, 5:00:44 PM [33m   WARN[39m [38;5;3m[DeadLetterHandler] [39m[33mObject:[39m
+{
+  "service": "DeadLetterHandler",
+  "operatorId": "op-1",
+  "correlationId": "corr-1",
+  "queue": "poll-jobs"
+}
+
+[33m[Nest] 20178  - [39m03/15/2026, 5:00:44 PM [33m   WARN[39m [38;5;3m[DeadLetterHandler] [39m[33mDead-lettered message found[39m
+[33m[Nest] 20178  - [39m03/15/2026, 5:00:44 PM [33m   WARN[39m [38;5;3m[DeadLetterHandler] [39m[33mObject:[39m
+{
+  "service": "DeadLetterHandler",
+  "operatorId": "op-2",
+  "correlationId": "corr-2",
+  "queue": "change-events"
+}
+
+[33m[Nest] 20178  - [39m03/15/2026, 5:00:44 PM [33m   WARN[39m [38;5;3m[DeadLetterHandler] [39m[33mDead-lettered message found[39m
+[33m[Nest] 20178  - [39m03/15/2026, 5:00:44 PM [33m   WARN[39m [38;5;3m[DeadLetterHandler] [39m[33mObject:[39m
+{
+  "service": "DeadLetterHandler",
+  "operatorId": "op-3",
+  "correlationId": "corr-3",
+  "queue": "suggestion-results"
+}
+
+[32m[Nest] 20178  - [39m03/15/2026, 5:00:44 PM [32m    LOG[39m [38;5;3m[DeadLetterHandler] [39m[32mDead-letter sweep complete[39m
+[32m[Nest] 20178  - [39m03/15/2026, 5:00:44 PM [32m    LOG[39m [38;5;3m[DeadLetterHandler] [39m[32mObject:[39m
+{
+  "service": "DeadLetterHandler",
+  "operatorId": "system",
+  "correlationId": "dlq-sweep"
+}
+
+[32m[Nest] 20178  - [39m03/15/2026, 5:00:44 PM [32m    LOG[39m [38;5;3m[DeadLetterHandler] [39m[32mStarting dead-letter sweep[39m
+[32m[Nest] 20178  - [39m03/15/2026, 5:00:44 PM [32m    LOG[39m [38;5;3m[DeadLetterHandler] [39m[32mObject:[39m
+{
+  "service": "DeadLetterHandler",
+  "operatorId": "system",
+  "correlationId": "dlq-sweep"
+}
+
+[33m[Nest] 20178  - [39m03/15/2026, 5:00:44 PM [33m   WARN[39m [38;5;3m[DeadLetterHandler] [39m[33mDead-lettered message found[39m
+[33m[Nest] 20178  - [39m03/15/2026, 5:00:44 PM [33m   WARN[39m [38;5;3m[DeadLetterHandler] [39m[33mObject:[39m
+{
+  "service": "DeadLetterHandler",
+  "operatorId": "op-log",
+  "correlationId": "corr-log",
+  "queue": "poll-jobs"
+}
+
+[32m[Nest] 20178  - [39m03/15/2026, 5:00:44 PM [32m    LOG[39m [38;5;3m[DeadLetterHandler] [39m[32mDead-letter sweep complete[39m
+[32m[Nest] 20178  - [39m03/15/2026, 5:00:44 PM [32m    LOG[39m [38;5;3m[DeadLetterHandler] [39m[32mObject:[39m
+{
+  "service": "DeadLetterHandler",
+  "operatorId": "system",
+  "correlationId": "dlq-sweep"
+}
+
+[32m[Nest] 20178  - [39m03/15/2026, 5:00:44 PM [32m    LOG[39m [38;5;3m[DeadLetterHandler] [39m[32mStarting dead-letter sweep[39m
+[32m[Nest] 20178  - [39m03/15/2026, 5:00:44 PM [32m    LOG[39m [38;5;3m[DeadLetterHandler] [39m[32mObject:[39m
+{
+  "service": "DeadLetterHandler",
+  "operatorId": "system",
+  "correlationId": "dlq-sweep"
+}
+
+[33m[Nest] 20178  - [39m03/15/2026, 5:00:44 PM [33m   WARN[39m [38;5;3m[DeadLetterHandler] [39m[33mDead-lettered message found[39m
+[33m[Nest] 20178  - [39m03/15/2026, 5:00:44 PM [33m   WARN[39m [38;5;3m[DeadLetterHandler] [39m[33mObject:[39m
+{
+  "service": "DeadLetterHandler",
+  "operatorId": "op-fail",
+  "correlationId": "corr-fail",
+  "queue": "poll-jobs"
+}
+
+[31m[Nest] 20178  - [39m03/15/2026, 5:00:44 PM [31m  ERROR[39m [38;5;3m[DeadLetterHandler] [39m[31mFailed to complete dead-lettered message[39m
+[31m[Nest] 20178  - [39m03/15/2026, 5:00:44 PM [31m  ERROR[39m [38;5;3m[DeadLetterHandler] [39m[31mObject:[39m
+{
+  "service": "DeadLetterHandler",
+  "operatorId": "op-fail",
+  "correlationId": "corr-fail",
+  "queue": "poll-jobs",
+  "error": "complete failed"
+}
+
+[33m[Nest] 20178  - [39m03/15/2026, 5:00:44 PM [33m   WARN[39m [38;5;3m[DeadLetterHandler] [39m[33mDead-lettered message found[39m
+[33m[Nest] 20178  - [39m03/15/2026, 5:00:44 PM [33m   WARN[39m [38;5;3m[DeadLetterHandler] [39m[33mObject:[39m
+{
+  "service": "DeadLetterHandler",
+  "operatorId": "op-ok",
+  "correlationId": "corr-ok",
+  "queue": "poll-jobs"
+}
+
+[32m[Nest] 20178  - [39m03/15/2026, 5:00:44 PM [32m    LOG[39m [38;5;3m[DeadLetterHandler] [39m[32mDead-letter sweep complete[39m
+[32m[Nest] 20178  - [39m03/15/2026, 5:00:44 PM [32m    LOG[39m [38;5;3m[DeadLetterHandler] [39m[32mObject:[39m
+{
+  "service": "DeadLetterHandler",
+  "operatorId": "system",
+  "correlationId": "dlq-sweep"
+}
+
+ ✓ test/service-bus/dead-letter.handler.spec.ts (4 tests) 9ms
+[32m[Nest] 20181  - [39m03/15/2026, 5:00:44 PM [32m    LOG[39m [38;5;3m[ServiceBusService] [39m[32mClosing all Service Bus senders and receivers[39m
+[32m[Nest] 20181  - [39m03/15/2026, 5:00:44 PM [32m    LOG[39m [38;5;3m[ServiceBusService] [39m[32mObject:[39m
+{
+  "service": "ServiceBusService",
+  "operatorId": "system",
+  "correlationId": "shutdown"
+}
+
+ ✓ test/service-bus/service-bus.service.spec.ts (5 tests) 4ms
+ ✓ test/app.spec.ts (1 test) 12ms
+[95m[Nest] 20180  - [39m03/15/2026, 5:00:44 PM [95m  DEBUG[39m [38;5;3m[TokenStore] [39m[95mToken stored for fspOperatorId=42 expires=2026-03-15T22:02:44.183Z[39m
+[32m[Nest] 20180  - [39m03/15/2026, 5:00:44 PM [32m    LOG[39m [38;5;3m[TokenRefreshService] [39m[32mRefreshing tokens for 1 operator(s): [42][39m
+[95m[Nest] 20180  - [39m03/15/2026, 5:00:44 PM [95m  DEBUG[39m [38;5;3m[TokenRefreshService] [39m[95mRefreshing token for fspOperatorId=42[39m
+[95m[Nest] 20180  - [39m03/15/2026, 5:00:44 PM [95m  DEBUG[39m [38;5;3m[TokenStore] [39m[95mToken stored for fspOperatorId=42 expires=2026-03-15T23:00:44.184Z[39m
+[32m[Nest] 20180  - [39m03/15/2026, 5:00:44 PM [32m    LOG[39m [38;5;3m[TokenRefreshService] [39m[32mToken refreshed for fspOperatorId=42 new expiry=2026-03-15T23:00:44.184Z[39m
+[95m[Nest] 20180  - [39m03/15/2026, 5:00:44 PM [95m  DEBUG[39m [38;5;3m[TokenStore] [39m[95mToken stored for fspOperatorId=42 expires=2026-03-15T22:30:44.184Z[39m
+[95m[Nest] 20180  - [39m03/15/2026, 5:00:44 PM [95m  DEBUG[39m [38;5;3m[TokenStore] [39m[95mToken stored for fspOperatorId=42 expires=2026-03-15T22:02:44.184Z[39m
+[32m[Nest] 20180  - [39m03/15/2026, 5:00:44 PM [32m    LOG[39m [38;5;3m[TokenRefreshService] [39m[32mRefreshing tokens for 1 operator(s): [42][39m
+[95m[Nest] 20180  - [39m03/15/2026, 5:00:44 PM [95m  DEBUG[39m [38;5;3m[TokenRefreshService] [39m[95mRefreshing token for fspOperatorId=42[39m
+[31m[Nest] 20180  - [39m03/15/2026, 5:00:44 PM [31m  ERROR[39m [38;5;3m[TokenRefreshService] [39m[31mToken refresh failed for fspOperatorId=42: Refresh token expired[39m
+[95m[Nest] 20180  - [39m03/15/2026, 5:00:44 PM [95m  DEBUG[39m [38;5;3m[TokenStore] [39m[95mToken stored for fspOperatorId=1 expires=2026-03-15T22:02:44.185Z[39m
+[95m[Nest] 20180  - [39m03/15/2026, 5:00:44 PM [95m  DEBUG[39m [38;5;3m[TokenStore] [39m[95mToken stored for fspOperatorId=2 expires=2026-03-15T22:30:44.185Z[39m
+[95m[Nest] 20180  - [39m03/15/2026, 5:00:44 PM [95m  DEBUG[39m [38;5;3m[TokenStore] [39m[95mToken stored for fspOperatorId=3 expires=2026-03-15T22:02:44.185Z[39m
+[32m[Nest] 20180  - [39m03/15/2026, 5:00:44 PM [32m    LOG[39m [38;5;3m[TokenRefreshService] [39m[32mRefreshing tokens for 2 operator(s): [1, 3][39m
+[95m[Nest] 20180  - [39m03/15/2026, 5:00:44 PM [95m  DEBUG[39m [38;5;3m[TokenRefreshService] [39m[95mRefreshing token for fspOperatorId=1[39m
+[95m[Nest] 20180  - [39m03/15/2026, 5:00:44 PM [95m  DEBUG[39m [38;5;3m[TokenRefreshService] [39m[95mRefreshing token for fspOperatorId=3[39m
+[95m[Nest] 20180  - [39m03/15/2026, 5:00:44 PM [95m  DEBUG[39m [38;5;3m[TokenStore] [39m[95mToken stored for fspOperatorId=1 expires=2026-03-15T23:00:44.185Z[39m
+[32m[Nest] 20180  - [39m03/15/2026, 5:00:44 PM [32m    LOG[39m [38;5;3m[TokenRefreshService] [39m[32mToken refreshed for fspOperatorId=1 new expiry=2026-03-15T23:00:44.185Z[39m
+[95m[Nest] 20180  - [39m03/15/2026, 5:00:44 PM [95m  DEBUG[39m [38;5;3m[TokenStore] [39m[95mToken stored for fspOperatorId=3 expires=2026-03-15T23:00:44.185Z[39m
+[32m[Nest] 20180  - [39m03/15/2026, 5:00:44 PM [32m    LOG[39m [38;5;3m[TokenRefreshService] [39m[32mToken refreshed for fspOperatorId=3 new expiry=2026-03-15T23:00:44.185Z[39m
+ ✓ test/token-refresh.service.spec.ts (5 tests) 3ms
+
+ Test Files  8 passed (8)
+      Tests  33 passed (33)
+   Start at  17:00:43
+   Duration  574ms (transform 281ms, setup 147ms, collect 1.79s, tests 46ms, environment 1ms, prepare 380ms)
+
+
+=== TypeScript checks ===
+API:
+PASS: zero errors
+Worker:
+PASS: zero errors
+
+=== Lint ===
+@fsp-scheduler/web:lint: ✔ No ESLint warnings or errors
+ Tasks:    6 successful, 6 total

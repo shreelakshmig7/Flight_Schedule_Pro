@@ -1,0 +1,53 @@
+{
+  "pr": "PR-14",
+  "title": "Use Case B — Reschedule",
+  "runDate": "2026-03-15",
+  "summary": {
+    "totalTestFiles": 19,
+    "totalTests": 224,
+    "passed": 224,
+    "failed": 0,
+    "newTests": 35,
+    "packages": {
+      "@fsp-scheduler/worker": {
+        "testFiles": 19,
+        "tests": 224,
+        "passed": 224,
+        "failed": 0,
+        "newFiles": ["test/use-cases/reschedule-use-case.service.spec.ts"]
+      }
+    }
+  },
+  "evalCasesCovered": {
+    "fsp-004": {
+      "description": "3 alternative slots found → all pass civil twilight, availability, and validateReservation → 3 PENDING suggestions created",
+      "status": "PASS"
+    },
+    "fsp-005": {
+      "description": "preferSameInstructor=true — same-instructor slots available → FindATimeService called with preferredInstructorIds, single call (no fallback)",
+      "status": "PASS"
+    },
+    "fsp-018": {
+      "description": "preferSameInstructor=true — no same-instructor slots → instructor fallback: second call without preferredInstructorIds, log 'instructor fallback', suggestions created from fallback slots",
+      "status": "PASS"
+    },
+    "fsp-032": {
+      "description": "No alternative slots found → log 'no slots found' + 'no suggestions created', 0 suggestions created, no civil twilight or validateReservation calls",
+      "status": "PASS"
+    }
+  },
+  "filesCreated": [
+    "apps/worker/src/use-cases/change-event.consumer.ts",
+    "apps/worker/src/use-cases/reschedule/reschedule-use-case.service.ts",
+    "apps/worker/src/use-cases/reschedule/reschedule.module.ts",
+    "apps/worker/src/use-cases/use-cases.module.ts",
+    "apps/worker/test/use-cases/reschedule-use-case.service.spec.ts",
+    "packages/database/prisma/migrations/20260315000004_add_operator_policy_config/migration.sql"
+  ],
+  "filesModified": [
+    "apps/worker/src/use-cases/waitlist/waitlist.module.ts",
+    "apps/worker/src/app.module.ts",
+    "packages/shared-types/src/constants.ts",
+    "packages/database/prisma/schema.prisma"
+  ]
+}

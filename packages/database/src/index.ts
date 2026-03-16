@@ -3,22 +3,30 @@
  * --------
  * Agentic Scheduler — FSP Integration — database package entry point
  * ------------------------------------------------------------------
- * Exports the singleton Prisma client instance used by apps/api and
- * apps/worker. The full Prisma schema is defined in prisma/schema.prisma
- * and the client is generated from it. This package is the only place
- * in the monorepo that instantiates PrismaClient.
+ * Exports the NestJS DatabaseModule, the injectable PrismaService, and all
+ * Prisma-generated types from the generated client. Apps import from
+ * @fsp-scheduler/database so they are never coupled to the internal
+ * generated/ path.
  *
- * Key exports: prisma (singleton PrismaClient), PACKAGE_NAME
+ * Key exports: DatabaseModule, PrismaService, Prisma (namespace), PACKAGE_NAME
  *
  * Author: Agentic Scheduler Team
  * Project: Agentic Scheduler — FSP Integration
- * PR: PR-1 — Monorepo Setup
+ * PR: PR-5 — Prisma Schema and Database Migrations
  */
 
 /** Package identifier — used in bootstrap tests. */
-export const PACKAGE_NAME = '@fsp-scheduler/database' as const;
+export const PACKAGE_NAME = '@fsp-scheduler/database';
 
-// PrismaClient singleton and generated types are added in PR-5.
-// The Prisma schema (prisma/schema.prisma) defining all five entities
-// is also added in PR-5: operators, suggestions, audit_log,
-// discovery_prospects, communications.
+export { DatabaseModule } from './database.module';
+export { PrismaService } from './prisma.service';
+
+// Re-export every Prisma-generated type so consumers import from one place.
+export { Prisma, PrismaClient } from './generated/prisma';
+export type {
+  Operator,
+  Suggestion,
+  AuditLog,
+  DiscoveryProspect,
+  Communication,
+} from './generated/prisma';

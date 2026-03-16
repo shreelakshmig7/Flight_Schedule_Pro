@@ -1,0 +1,28 @@
+{
+  "instructors": [
+    {
+      "id": "usr-instr-001",
+      "firstName": "Marcus",
+      "lastName": "Chen",
+      "fullName": "Marcus Chen",
+      "instructorType": "CFI",
+      "isActive": true
+    },
+    {
+      "id": "usr-instr-002",
+      "firstName": "Priya",
+      "lastName": "Sharma",
+      "fullName": "Priya Sharma",
+      "instructorType": "CFI",
+      "isActive": true
+    },
+    {
+      "id": "usr-instr-003",
+      "firstName": "Daniel",
+      "lastName": "Ortiz",
+      "fullName": "Daniel Ortiz",
+      "instructorType": "CFII",
+      "isActive": true
+    }
+  ]
+}

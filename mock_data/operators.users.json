@@ -1,0 +1,123 @@
+{
+  "myoperators": [
+    {
+      "id": 1001,
+      "name": "Skyline Flight Academy",
+      "isActive": true,
+      "isPending": false
+    }
+  ],
+  "operatorDetail": {
+    "id": 1001,
+    "name": "Skyline Flight Academy",
+    "userId": "usr-scheduler-001",
+    "firstName": "Alex",
+    "lastName": "Reynolds",
+    "email": "scheduler@skyline-flight-academy.com",
+    "isActive": true,
+    "isPending": false
+  },
+  "users": [
+    {
+      "id": "usr-scheduler-001",
+      "firstName": "Alex",
+      "lastName": "Reynolds",
+      "fullName": "Alex Reynolds",
+      "email": "scheduler@skyline-flight-academy.com",
+      "role": "Scheduler",
+      "isActive": true,
+      "imageUrl": null
+    },
+    {
+      "id": "usr-manager-001",
+      "firstName": "Jordan",
+      "lastName": "Kim",
+      "fullName": "Jordan Kim",
+      "email": "manager@skyline-flight-academy.com",
+      "role": "Manager",
+      "isActive": true,
+      "imageUrl": null
+    },
+    {
+      "id": "usr-instr-001",
+      "firstName": "Marcus",
+      "lastName": "Chen",
+      "fullName": "Marcus Chen",
+      "email": "mchen@skyline-flight-academy.com",
+      "role": "Instructor",
+      "isActive": true,
+      "imageUrl": null
+    },
+    {
+      "id": "usr-instr-002",
+      "firstName": "Priya",
+      "lastName": "Sharma",
+      "fullName": "Priya Sharma",
+      "email": "psharma@skyline-flight-academy.com",
+      "role": "Instructor",
+      "isActive": true,
+      "imageUrl": null
+    },
+    {
+      "id": "usr-student-001",
+      "firstName": "Tyler",
+      "lastName": "Brooks",
+      "fullName": "Tyler Brooks",
+      "email": "tbrooks@email.com",
+      "role": "Student",
+      "isActive": true,
+      "imageUrl": null
+    },
+    {
+      "id": "usr-student-002",
+      "firstName": "Aisha",
+      "lastName": "Patel",
+      "fullName": "Aisha Patel",
+      "email": "apatel@email.com",
+      "role": "Student",
+      "isActive": true,
+      "imageUrl": null
+    },
+    {
+      "id": "usr-student-003",
+      "firstName": "Connor",
+      "lastName": "Walsh",
+      "fullName": "Connor Walsh",
+      "email": "cwalsh@email.com",
+      "role": "Student",
+      "isActive": true,
+      "imageUrl": null
+    },
+    {
+      "id": "usr-student-004",
+      "firstName": "Mei",
+      "lastName": "Zhang",
+      "fullName": "Mei Zhang",
+      "email": "mzhang@email.com",
+      "role": "Student",
+      "isActive": true,
+      "imageUrl": null
+    },
+    {
+      "id": "usr-student-005",
+      "firstName": "Devon",
+      "lastName": "Carter",
+      "fullName": "Devon Carter",
+      "email": "dcarter@email.com",
+      "role": "Student",
+      "isActive": true,
+      "imageUrl": null
+    }
+  ],
+  "permissions": {
+    "usr-scheduler-001": ["canManageSchedule", "canViewReports", "canViewStudents"],
+    "usr-manager-001": ["canManageSchedule", "canViewReports", "canViewStudents", "canManageOperator"],
+    "usr-instr-001": ["canViewSchedule", "canManageOwnAvailability"],
+    "usr-instr-002": ["canViewSchedule", "canManageOwnAvailability"],
+    "usr-student-001": ["canViewOwnSchedule"],
+    "usr-student-002": ["canViewOwnSchedule"],
+    "usr-student-003": ["canViewOwnSchedule"],
+    "usr-student-004": ["canViewOwnSchedule"],
+    "usr-student-005": ["canViewOwnSchedule"]
+  }
+}

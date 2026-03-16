@@ -1,0 +1,53 @@
+{
+  "pr": "PR-13",
+  "title": "Use Case A — Waitlist",
+  "runDate": "2026-03-15",
+  "summary": {
+    "totalTestFiles": 18,
+    "totalTests": 189,
+    "passed": 189,
+    "failed": 0,
+    "newTests": 24,
+    "packages": {
+      "@fsp-scheduler/worker": {
+        "testFiles": 18,
+        "tests": 189,
+        "passed": 189,
+        "failed": 0,
+        "newFiles": ["test/use-cases/waitlist-use-case.service.spec.ts"]
+      }
+    }
+  },
+  "evalCasesCovered": {
+    "fsp-001": {
+      "description": "NEW_OPENING detected → top candidate available, aircraft clean, validateOK → PENDING suggestion created",
+      "status": "PASS"
+    },
+    "fsp-002": {
+      "description": "Multiple candidates — student ranked #1 by PriorityWeightEngine is selected",
+      "status": "PASS"
+    },
+    "fsp-029": {
+      "description": "Top candidate unavailable → candidate skipped (availability constraint) → next candidate selected",
+      "status": "PASS"
+    },
+    "fsp-030": {
+      "description": "Aircraft has open squawk → exclusion logged → no suggestion created, no students fetched",
+      "status": "PASS"
+    },
+    "fsp-031": {
+      "description": "All 3 top candidates fail validateReservation → log '3 candidates attempted, no suggestion created'",
+      "status": "PASS"
+    }
+  },
+  "filesCreated": [
+    "apps/worker/src/use-cases/waitlist/waitlist-use-case.service.ts",
+    "apps/worker/src/use-cases/waitlist/change-event.consumer.ts",
+    "apps/worker/src/use-cases/waitlist/waitlist.module.ts",
+    "apps/worker/test/use-cases/waitlist-use-case.service.spec.ts"
+  ],
+  "filesModified": [
+    "packages/shared-types/src/constants.ts",
+    "apps/worker/src/app.module.ts"
+  ]
+}

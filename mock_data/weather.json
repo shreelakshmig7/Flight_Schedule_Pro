@@ -1,0 +1,64 @@
+{
+  "metar": {
+    "icao": "KPAO",
+    "observed": "2025-10-13T20:53:00Z",
+    "raw_text": "KPAO 132053Z 31008KT 10SM FEW025 18/08 A2998 RMK AO2 SLP149 T01830083",
+    "wind": {
+      "degrees": 310,
+      "speed_kts": 8,
+      "gust_kts": null
+    },
+    "visibility": {
+      "miles": "10"
+    },
+    "clouds": [
+      { "code": "FEW", "base_feet_agl": 2500 }
+    ],
+    "temperature": {
+      "celsius": 18
+    },
+    "dewpoint": {
+      "celsius": 8
+    },
+    "altimeter": {
+      "inches_hg": 29.98
+    },
+    "flight_category": "VFR",
+    "conditions": []
+  },
+  "taf": {
+    "icao": "KPAO",
+    "raw_text": "KPAO 131730Z 1318/1418 31008KT P6SM SKC FM140600 VRB03KT P6SM SKC",
+    "forecast": [
+      {
+        "period_start": "2025-10-13T18:00:00Z",
+        "period_end": "2025-10-14T06:00:00Z",
+        "flight_category": "VFR",
+        "wind": { "degrees": 310, "speed_kts": 8 },
+        "visibility": { "miles": "6+" },
+        "clouds": []
+      },
+      {
+        "period_start": "2025-10-14T06:00:00Z",
+        "period_end": "2025-10-14T18:00:00Z",
+        "flight_category": "VFR",
+        "wind": { "degrees": null, "speed_kts": 3 },
+        "visibility": { "miles": "6+" },
+        "clouds": []
+      }
+    ]
+  },
+  "metarIFR": {
+    "icao": "KPAO",
+    "observed": "2025-10-15T06:53:00Z",
+    "raw_text": "KPAO 150653Z 00000KT 1/4SM FG OVC002 12/12 A3005",
+    "wind": { "degrees": 0, "speed_kts": 0, "gust_kts": null },
+    "visibility": { "miles": "0.25" },
+    "clouds": [{ "code": "OVC", "base_feet_agl": 200 }],
+    "temperature": { "celsius": 12 },
+    "dewpoint": { "celsius": 12 },
+    "altimeter": { "inches_hg": 30.05 },
+    "flight_category": "LIFR",
+    "conditions": [{ "code": "FG", "text": "Fog" }]
+  }
+}

@@ -1,0 +1,33 @@
+
+> @fsp-scheduler/fsp-client@0.1.0 test
+> vitest run
+
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/shreelakshmigopinatharao/Flight_Schedule_Pro/packages/fsp-client
+
+ ✓ test/fsp-http.client.spec.ts (14 tests) 109ms
+ ✓ test/civil-twilight.service.spec.ts (2 tests) 32ms
+ ✓ test/find-a-time.service.spec.ts (4 tests) 37ms
+ ✓ test/availability.service.spec.ts (4 tests) 40ms
+ ✓ test/reservations.service.spec.ts (6 tests) 43ms
+ ✓ test/enrollment.service.spec.ts (5 tests) 48ms
+ ✓ test/auth.service.spec.ts (7 tests) 51ms
+ ✓ test/index.spec.ts (2 tests) 2ms
+
+ Test Files  8 passed (8)
+      Tests  44 passed (44)
+   Start at  15:57:01
+   Duration  679ms (transform 334ms, setup 0ms, collect 2.68s, tests 363ms, environment 1ms, prepare 490ms)
+
+
+--- Build Results ---
+packages/shared-types: PASS (tsc -p tsconfig.json)
+packages/fsp-client: PASS (tsc -p tsconfig.json)
+
+--- Summary ---
+PR-6 FSP API Client Library
+Date: 2026-03-15
+Test Files: 8 passed
+Tests: 44 passed (0 failed)
+Build: Both packages compile cleanly with TypeScript strict mode

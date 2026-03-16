@@ -1,0 +1,51 @@
+{
+  "pr": "PR-16",
+  "title": "Use Case D — Schedule Next Lesson on Completion",
+  "runDate": "2026-03-15",
+  "summary": {
+    "totalTestFiles": 21,
+    "totalTests": 279,
+    "passed": 279,
+    "failed": 0,
+    "newTests": 30,
+    "packages": {
+      "@fsp-scheduler/worker": {
+        "testFiles": 21,
+        "tests": 279,
+        "passed": 279,
+        "failed": 0,
+        "newFiles": ["test/use-cases/next-lesson-use-case.service.spec.ts"]
+      }
+    }
+  },
+  "evalCasesCovered": {
+    "fsp-008": {
+      "description": "STATUS_CHANGE COMPLETED → enrollment progress → Find-a-Time → PENDING NEXT_LESSON suggestion with lessonId and studentId",
+      "status": "PASS"
+    },
+    "fsp-009": {
+      "description": "3+ pending lessons → AutoScheduleService called, FindATimeService NOT called, deduplication by eventId, cap at NEXT_LESSON_MAX_SUGGESTIONS",
+      "status": "PASS"
+    },
+    "fsp-010": {
+      "description": "preferContinuityInstructor=true → getTrainingSessions called → last instructorId passed as preferredInstructorIds to FindATimeService",
+      "status": "PASS"
+    },
+    "fsp-020": {
+      "description": "hourly scan with existing PENDING NEXT_LESSON suggestion → 'duplicate skipped' logged with studentId, scheduleNextLessonForStudent NOT called",
+      "status": "PASS"
+    }
+  },
+  "filesCreated": [
+    "apps/worker/src/use-cases/next-lesson/next-lesson-use-case.service.ts",
+    "apps/worker/src/use-cases/next-lesson/next-lesson-scan.service.ts",
+    "apps/worker/src/use-cases/next-lesson/next-lesson.module.ts",
+    "apps/worker/test/use-cases/next-lesson-use-case.service.spec.ts",
+    "tests/results/pr16-next-lesson-use-case.json"
+  ],
+  "filesModified": [
+    "apps/worker/src/use-cases/use-cases.module.ts",
+    "apps/worker/src/use-cases/change-event.consumer.ts",
+    "packages/shared-types/src/constants.ts"
+  ]
+}

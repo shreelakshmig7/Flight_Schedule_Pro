@@ -1,0 +1,227 @@
+{
+  "enrollments": {
+    "usr-student-001": [
+      {
+        "enrollmentId": "enroll-001",
+        "studentId": "usr-student-001",
+        "courseId": "course-ppl-001",
+        "courseName": "Private Pilot License",
+        "status": 1,
+        "startDate": "2025-07-01",
+        "expectedEndDate": "2026-01-31"
+      }
+    ],
+    "usr-student-002": [
+      {
+        "enrollmentId": "enroll-002",
+        "studentId": "usr-student-002",
+        "courseId": "course-ppl-001",
+        "courseName": "Private Pilot License",
+        "status": 1,
+        "startDate": "2025-06-15",
+        "expectedEndDate": "2026-01-15"
+      }
+    ],
+    "usr-student-003": [
+      {
+        "enrollmentId": "enroll-003",
+        "studentId": "usr-student-003",
+        "courseId": "course-ppl-001",
+        "courseName": "Private Pilot License",
+        "status": 1,
+        "startDate": "2025-05-01",
+        "expectedEndDate": "2025-12-31"
+      }
+    ],
+    "usr-student-004": [
+      {
+        "enrollmentId": "enroll-004",
+        "studentId": "usr-student-004",
+        "courseId": "course-ppl-001",
+        "courseName": "Private Pilot License",
+        "status": 1,
+        "startDate": "2025-08-01",
+        "expectedEndDate": "2026-03-01"
+      }
+    ],
+    "usr-student-005": [
+      {
+        "enrollmentId": "enroll-005",
+        "studentId": "usr-student-005",
+        "courseId": "course-ppl-001",
+        "courseName": "Private Pilot License",
+        "status": 1,
+        "startDate": "2025-04-01",
+        "expectedEndDate": "2025-11-30"
+      }
+    ]
+  },
+  "enrollmentProgress": {
+    "enroll-001": {
+      "enrollmentId": "enroll-001",
+      "courseId": "course-ppl-001",
+      "completionPercentage": 33,
+      "totalLessons": 18,
+      "completedLessons": 5,
+      "nextLesson": {
+        "lessonId": "lesson-006",
+        "lessonName": "Lesson 6 — Traffic Patterns",
+        "lessonOrder": 6,
+        "activityTypeId": "act-001",
+        "flightType": 0,
+        "timeOfDay": 1
+      },
+      "totalFlightHours": 8.5,
+      "milestones": {
+        "firstSolo": false,
+        "crossCountrySolo": false,
+        "checkrideReady": false
+      }
+    },
+    "enroll-002": {
+      "enrollmentId": "enroll-002",
+      "courseId": "course-ppl-001",
+      "completionPercentage": 44,
+      "totalLessons": 18,
+      "completedLessons": 7,
+      "nextLesson": {
+        "lessonId": "lesson-008",
+        "lessonName": "Lesson 8 — Slow Flight and Stalls",
+        "lessonOrder": 8,
+        "activityTypeId": "act-001",
+        "flightType": 0,
+        "timeOfDay": 1
+      },
+      "totalFlightHours": 12.3,
+      "milestones": {
+        "firstSolo": true,
+        "crossCountrySolo": false,
+        "checkrideReady": false
+      }
+    },
+    "enroll-003": {
+      "enrollmentId": "enroll-003",
+      "courseId": "course-ppl-001",
+      "completionPercentage": 67,
+      "totalLessons": 18,
+      "completedLessons": 11,
+      "nextLesson": {
+        "lessonId": "lesson-012",
+        "lessonName": "Lesson 12 — Solo Cross Country",
+        "lessonOrder": 12,
+        "activityTypeId": "act-002",
+        "flightType": 1,
+        "timeOfDay": 1
+      },
+      "totalFlightHours": 32.7,
+      "milestones": {
+        "firstSolo": true,
+        "crossCountrySolo": false,
+        "checkrideReady": false
+      }
+    },
+    "enroll-004": {
+      "enrollmentId": "enroll-004",
+      "courseId": "course-ppl-001",
+      "completionPercentage": 17,
+      "totalLessons": 18,
+      "completedLessons": 2,
+      "nextLesson": {
+        "lessonId": "lesson-003",
+        "lessonName": "Lesson 3 — Basic Maneuvers",
+        "lessonOrder": 3,
+        "activityTypeId": "act-001",
+        "flightType": 0,
+        "timeOfDay": 0
+      },
+      "totalFlightHours": 3.2,
+      "milestones": {
+        "firstSolo": false,
+        "crossCountrySolo": false,
+        "checkrideReady": false
+      }
+    },
+    "enroll-005": {
+      "enrollmentId": "enroll-005",
+      "courseId": "course-ppl-001",
+      "completionPercentage": 83,
+      "totalLessons": 18,
+      "completedLessons": 14,
+      "nextLesson": {
+        "lessonId": "lesson-015",
+        "lessonName": "Lesson 15 — Stage Check 1",
+        "lessonOrder": 15,
+        "activityTypeId": "act-007",
+        "flightType": 0,
+        "timeOfDay": 1
+      },
+      "totalFlightHours": 48.1,
+      "milestones": {
+        "firstSolo": true,
+        "crossCountrySolo": true,
+        "checkrideReady": false
+      }
+    }
+  },
+  "trainingSessions": {
+    "enroll-001": [
+      {
+        "sessionId": "sess-001",
+        "enrollmentId": "enroll-001",
+        "lessonId": "lesson-001",
+        "lessonName": "Lesson 1 — Intro to Flight",
+        "completedAt": "2025-07-10T16:00:00Z",
+        "instructorId": "usr-instr-001",
+        "reservationId": "res-hist-001",
+        "flightHours": 1.5
+      },
+      {
+        "sessionId": "sess-002",
+        "enrollmentId": "enroll-001",
+        "lessonId": "lesson-002",
+        "completedAt": "2025-07-18T16:00:00Z",
+        "instructorId": "usr-instr-001",
+        "reservationId": "res-hist-002",
+        "flightHours": 1.8
+      },
+      {
+        "sessionId": "sess-003",
+        "enrollmentId": "enroll-001",
+        "lessonId": "lesson-003",
+        "completedAt": "2025-08-01T16:00:00Z",
+        "instructorId": "usr-instr-001",
+        "reservationId": "res-hist-003",
+        "flightHours": 1.7
+      },
+      {
+        "sessionId": "sess-004",
+        "enrollmentId": "enroll-001",
+        "lessonId": "lesson-004",
+        "completedAt": "2025-08-15T16:00:00Z",
+        "instructorId": "usr-instr-001",
+        "reservationId": "res-hist-004",
+        "flightHours": 1.8
+      },
+      {
+        "sessionId": "sess-005",
+        "enrollmentId": "enroll-001",
+        "lessonId": "lesson-005",
+        "completedAt": "2025-10-13T16:00:00Z",
+        "instructorId": "usr-instr-001",
+        "reservationId": "res-001",
+        "flightHours": 1.7
+      }
+    ]
+  },
+  "checkrideExamScores": [],
+  "knowledgeTests": [
+    {
+      "testId": "kt-001",
+      "studentId": "usr-student-003",
+      "testName": "PAR Knowledge Test",
+      "score": 82,
+      "passedAt": "2025-09-15",
+      "expiresAt": "2027-09-15"
+    }
+  ]
+}

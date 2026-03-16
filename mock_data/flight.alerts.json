@@ -1,0 +1,31 @@
+{
+  "flightAlerts": [
+    {
+      "id": "fa-001",
+      "reservationId": "res-003",
+      "aircraftId": "ac-001",
+      "alertType": 1,
+      "description": "Student solo — first solo cross country",
+      "createdAt": "2025-10-14T13:00:00Z",
+      "isComplete": false,
+      "isOverdue": false
+    }
+  ],
+  "overdueAlerts": [],
+  "alertsByAircraft": {
+    "ac-001": [
+      {
+        "id": "fa-001",
+        "reservationId": "res-003",
+        "aircraftId": "ac-001",
+        "alertType": 1,
+        "description": "Student solo — first solo cross country",
+        "createdAt": "2025-10-14T13:00:00Z",
+        "isComplete": false,
+        "isOverdue": false
+      }
+    ],
+    "ac-002": [],
+    "ac-003": []
+  }
+}

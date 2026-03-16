@@ -1,0 +1,21 @@
+PR-4 Azure Service Bus Queue Topology — Test Results
+Date: Sun Mar 15 11:51:14 CDT 2026
+======================================================
+
+=== packages/shared-types ===
+ ✓ test/service-bus.types.spec.ts (14 tests) 2ms
+ ✓ test/index.spec.ts (2 tests) 1ms
+ Test Files  2 passed (2)
+      Tests  16 passed (16)
+   Duration  232ms (transform 36ms, setup 0ms, collect 38ms, tests 3ms, environment 0ms, prepare 77ms)
+
+=== apps/worker ===
+ ✓ test/service-bus/publishers/suggestion-result.publisher.spec.ts (2 tests) 3ms
+ ✓ test/service-bus/publishers/change-event.publisher.spec.ts (2 tests) 3ms
+ ✓ test/service-bus/publishers/poll-job.publisher.spec.ts (3 tests) 3ms
+ ✓ test/service-bus/service-bus.service.spec.ts (5 tests) 3ms
+ ✓ test/service-bus/dead-letter.handler.spec.ts (4 tests) 4ms
+ ✓ test/app.spec.ts (1 test) 13ms
+ Test Files  6 passed (6)
+      Tests  17 passed (17)
+   Duration  469ms (transform 188ms, setup 162ms, collect 1.15s, tests 30ms, environment 1ms, prepare 244ms)

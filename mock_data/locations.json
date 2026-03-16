@@ -1,0 +1,25 @@
+{
+  "locations": [
+    {
+      "id": "loc-001",
+      "name": "Skyline Main — KPAO",
+      "code": "KPAO",
+      "timeZone": "America/Los_Angeles",
+      "isActive": true
+    },
+    {
+      "id": "loc-002",
+      "name": "Skyline North — KSQL",
+      "code": "KSQL",
+      "timeZone": "America/Los_Angeles",
+      "isActive": true
+    }
+  ],
+  "locationDetail": {
+    "id": "loc-001",
+    "name": "Skyline Main — KPAO",
+    "code": "KPAO",
+    "timeZone": "America/Los_Angeles",
+    "isActive": true
+  }
+}

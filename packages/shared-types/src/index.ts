@@ -16,10 +16,33 @@
  */
 
 /** Package identifier — used in bootstrap tests. */
-export const PACKAGE_NAME = '@fsp-scheduler/shared-types' as const;
+export const PACKAGE_NAME = '@fsp-scheduler/shared-types';
 
-// Type and constant modules are added in subsequent PRs:
-// PR-4: Service Bus message types (PollJobMessage, ChangeEventMessage, SuggestionResultMessage)
-// PR-5: Database entity types, enums (SuggestionStatus, UseCaseType, etc.)
+// PR-4: Service Bus queue topology constants and message types
+// Note: `SuggestionStatus` and `PollingTier` are defined in both ./constants
+// (broader DB enums) and ./service-bus.types (narrower message types). We
+// re-export the DB versions from ./constants and the SB-specific types from
+// service-bus.types explicitly to avoid TS2308 ambiguity errors.
+export * from './constants';
+export {
+  BaseMessage,
+  PollJobMessage,
+  ChangeEventMessage,
+  SuggestionResultMessage,
+  isPollJobMessage,
+  isChangeEventMessage,
+  isSuggestionResultMessage,
+  ChangeType,
+} from './service-bus.types';
+
 // PR-6: FSP API request/response types
-// PR-8+: Scheduling constants (polling tiers, rate limits, LLM config, etc.)
+export * from './fsp.types';
+
+// PR-7: Operator and tenant context types
+export * from './operator.types';
+
+// PR-11: Priority Weight Engine types
+export * from './priority-weight.types';
+
+// PR-12: LLM Rationale Generator types
+export * from './llm.types';

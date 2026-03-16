@@ -1,0 +1,89 @@
+{
+  "students": [
+    {
+      "id": "usr-student-001",
+      "firstName": "Tyler",
+      "lastName": "Brooks",
+      "fullName": "Tyler Brooks",
+      "email": "tbrooks@email.com",
+      "phone": "+14155550101",
+      "isActive": true,
+      "enrollmentIds": ["enroll-001"],
+      "lastFlightDate": "2025-10-13",
+      "totalFlightHours": 8.5
+    },
+    {
+      "id": "usr-student-002",
+      "firstName": "Aisha",
+      "lastName": "Patel",
+      "fullName": "Aisha Patel",
+      "email": "apatel@email.com",
+      "phone": "+14155550102",
+      "isActive": true,
+      "enrollmentIds": ["enroll-002"],
+      "lastFlightDate": "2025-10-12",
+      "totalFlightHours": 12.3
+    },
+    {
+      "id": "usr-student-003",
+      "firstName": "Connor",
+      "lastName": "Walsh",
+      "fullName": "Connor Walsh",
+      "email": "cwalsh@email.com",
+      "phone": "+14155550103",
+      "isActive": true,
+      "enrollmentIds": ["enroll-003"],
+      "lastFlightDate": "2025-09-28",
+      "totalFlightHours": 32.7
+    },
+    {
+      "id": "usr-student-004",
+      "firstName": "Mei",
+      "lastName": "Zhang",
+      "fullName": "Mei Zhang",
+      "email": "mzhang@email.com",
+      "phone": "+14155550104",
+      "isActive": true,
+      "enrollmentIds": ["enroll-004"],
+      "lastFlightDate": "2025-10-14",
+      "totalFlightHours": 3.2
+    },
+    {
+      "id": "usr-student-005",
+      "firstName": "Devon",
+      "lastName": "Carter",
+      "fullName": "Devon Carter",
+      "email": "dcarter@email.com",
+      "phone": "+14155550105",
+      "isActive": true,
+      "enrollmentIds": ["enroll-005"],
+      "lastFlightDate": "2025-09-05",
+      "totalFlightHours": 48.1
+    }
+  ],
+  "studentDropdownItems": [
+    { "id": "usr-student-001", "label": "Tyler Brooks" },
+    { "id": "usr-student-002", "label": "Aisha Patel" },
+    { "id": "usr-student-003", "label": "Connor Walsh" },
+    { "id": "usr-student-004", "label": "Mei Zhang" },
+    { "id": "usr-student-005", "label": "Devon Carter" }
+  ],
+  "trainingAlerts": [
+    {
+      "alertId": "alert-001",
+      "studentId": "usr-student-003",
+      "alertType": "NO_UPCOMING_FLIGHT",
+      "message": "Connor Walsh has not flown in 15 days and has no upcoming reservation",
+      "createdAt": "2025-10-13T08:00:00Z",
+      "isRead": false
+    },
+    {
+      "alertId": "alert-002",
+      "studentId": "usr-student-005",
+      "alertType": "NO_UPCOMING_FLIGHT",
+      "message": "Devon Carter has not flown in 38 days and has no upcoming reservation",
+      "createdAt": "2025-10-13T08:00:00Z",
+      "isRead": false
+    }
+  ]
+}

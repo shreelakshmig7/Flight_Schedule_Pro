@@ -1,0 +1,65 @@
+{
+  "autoScheduleSettings": {
+    "minutesBetweenEvents": 30,
+    "percentageUtilized": 85,
+    "reservationStaggerGroups": 2,
+    "schedulingWindowStart": "07:00",
+    "schedulingWindowEnd": "20:00",
+    "staggerOffsetTime": 30,
+    "useAllInstructors": false
+  },
+  "autoScheduleResponse": {
+    "events": [
+      {
+        "eventId": "evt-001",
+        "customerId": "usr-student-001",
+        "instructorId": "usr-instr-001",
+        "aircraftId": "ac-001",
+        "success": true,
+        "startTime": "2025-10-16T14:00:00Z",
+        "endTime": "2025-10-16T16:00:00Z",
+        "error": null
+      },
+      {
+        "eventId": "evt-002",
+        "customerId": "usr-student-002",
+        "instructorId": "usr-instr-002",
+        "aircraftId": "ac-002",
+        "success": true,
+        "startTime": "2025-10-16T16:30:00Z",
+        "endTime": "2025-10-16T18:30:00Z",
+        "error": null
+      },
+      {
+        "eventId": "evt-003",
+        "customerId": "usr-student-003",
+        "instructorId": null,
+        "aircraftId": "ac-001",
+        "success": true,
+        "startTime": "2025-10-17T14:00:00Z",
+        "endTime": "2025-10-17T17:00:00Z",
+        "error": null
+      },
+      {
+        "eventId": "evt-004",
+        "customerId": "usr-student-004",
+        "instructorId": "usr-instr-001",
+        "aircraftId": "ac-002",
+        "success": true,
+        "startTime": "2025-10-17T15:00:00Z",
+        "endTime": "2025-10-17T17:00:00Z",
+        "error": null
+      },
+      {
+        "eventId": "evt-005",
+        "customerId": "usr-student-005",
+        "instructorId": "usr-instr-003",
+        "aircraftId": "ac-001",
+        "success": false,
+        "startTime": null,
+        "endTime": null,
+        "error": "No available slot found within scheduling window for stage check with CFII"
+      }
+    ]
+  }
+}

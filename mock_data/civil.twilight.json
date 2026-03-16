@@ -1,0 +1,73 @@
+{
+  "civilTwilight": {
+    "loc-001": {
+      "locationId": "loc-001",
+      "icao": "KPAO",
+      "dates": {
+        "2025-10-13": {
+          "date": "2025-10-13",
+          "civilTwilightStart": "2025-10-13T13:51:00Z",
+          "civilTwilightEnd": "2025-10-14T01:25:00Z",
+          "sunriseUtc": "2025-10-13T14:16:00Z",
+          "sunsetUtc": "2025-10-14T01:01:00Z",
+          "timeZone": "America/Los_Angeles",
+          "timeZoneOffset": -420
+        },
+        "2025-10-14": {
+          "date": "2025-10-14",
+          "civilTwilightStart": "2025-10-14T13:52:00Z",
+          "civilTwilightEnd": "2025-10-15T01:23:00Z",
+          "sunriseUtc": "2025-10-14T14:17:00Z",
+          "sunsetUtc": "2025-10-15T00:59:00Z",
+          "timeZone": "America/Los_Angeles",
+          "timeZoneOffset": -420
+        },
+        "2025-10-15": {
+          "date": "2025-10-15",
+          "civilTwilightStart": "2025-10-15T13:54:00Z",
+          "civilTwilightEnd": "2025-10-16T01:22:00Z",
+          "sunriseUtc": "2025-10-15T14:18:00Z",
+          "sunsetUtc": "2025-10-16T00:57:00Z",
+          "timeZone": "America/Los_Angeles",
+          "timeZoneOffset": -420
+        },
+        "2025-10-16": {
+          "date": "2025-10-16",
+          "civilTwilightStart": "2025-10-16T13:55:00Z",
+          "civilTwilightEnd": "2025-10-17T01:20:00Z",
+          "sunriseUtc": "2025-10-16T14:19:00Z",
+          "sunsetUtc": "2025-10-17T00:55:00Z",
+          "timeZone": "America/Los_Angeles",
+          "timeZoneOffset": -420
+        },
+        "2025-10-17": {
+          "date": "2025-10-17",
+          "civilTwilightStart": "2025-10-17T13:56:00Z",
+          "civilTwilightEnd": "2025-10-18T01:18:00Z",
+          "sunriseUtc": "2025-10-17T14:21:00Z",
+          "sunsetUtc": "2025-10-18T00:53:00Z",
+          "timeZone": "America/Los_Angeles",
+          "timeZoneOffset": -420
+        },
+        "2025-10-18": {
+          "date": "2025-10-18",
+          "civilTwilightStart": "2025-10-18T13:58:00Z",
+          "civilTwilightEnd": "2025-10-19T01:17:00Z",
+          "sunriseUtc": "2025-10-18T14:22:00Z",
+          "sunsetUtc": "2025-10-19T00:51:00Z",
+          "timeZone": "America/Los_Angeles",
+          "timeZoneOffset": -420
+        },
+        "2025-10-19": {
+          "date": "2025-10-19",
+          "civilTwilightStart": "2025-10-19T13:59:00Z",
+          "civilTwilightEnd": "2025-10-20T01:15:00Z",
+          "sunriseUtc": "2025-10-19T14:23:00Z",
+          "sunsetUtc": "2025-10-20T00:49:00Z",
+          "timeZone": "America/Los_Angeles",
+          "timeZoneOffset": -420
+        }
+      }
+    }
+  }
+}
