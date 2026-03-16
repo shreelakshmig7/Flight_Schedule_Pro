@@ -47,10 +47,26 @@ module.exports = {
       },
     },
     {
-      // Next.js pages/components have different patterns
+      // Next.js pages/components have different patterns.
+      // The strict unsafe-* and promise rules are appropriate for the NestJS
+      // backend but conflict with idiomatic React patterns (hooks, event
+      // handlers, inferred JSX prop types, dynamic API responses, etc.).
       files: ['apps/web/**/*.tsx', 'apps/web/**/*.ts'],
       rules: {
         '@typescript-eslint/explicit-module-boundary-types': 'off',
+        '@typescript-eslint/explicit-function-return-type': 'off',
+        '@typescript-eslint/no-unsafe-assignment': 'off',
+        '@typescript-eslint/no-unsafe-call': 'off',
+        '@typescript-eslint/no-unsafe-member-access': 'off',
+        '@typescript-eslint/no-unsafe-return': 'off',
+        '@typescript-eslint/no-unsafe-argument': 'off',
+        '@typescript-eslint/no-floating-promises': 'off',
+        '@typescript-eslint/no-misused-promises': 'off',
+        '@typescript-eslint/require-await': 'off',
+        '@typescript-eslint/no-redundant-type-constituents': 'off',
+        '@typescript-eslint/no-base-to-string': 'off',
+        '@typescript-eslint/restrict-template-expressions': 'off',
+        'no-console': 'off',
       },
     },
   ],

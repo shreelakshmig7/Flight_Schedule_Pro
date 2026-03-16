@@ -183,11 +183,11 @@ export function SuggestionCard({
           <p style={{fontSize:'1rem',fontWeight:'bold',margin:'0'}}>{slotStart}</p>
         </div>
 
-        {/* @ts-ignore - style typing issue with React */}
+        {/* @ts-expect-error - style typing issue with React */}
         <div><p style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', margin: '0 0 0.25rem 0' }}>Instructor</p><p style={{fontSize:'1rem',fontWeight:'bold',margin:'0'}}>{instructorName}</p></div>
-        {/* @ts-ignore - style typing issue with React */}
+        {/* @ts-expect-error - style typing issue with React */}
         <div><p style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', margin: '0 0 0.25rem 0' }}>Aircraft</p><p style={{fontSize:'1rem',fontWeight:'bold',margin:'0'}}>{aircraftTail}</p></div>
-        {/* @ts-ignore - style typing issue with React */}
+        {/* @ts-expect-error - style typing issue with React */}
         <div><p style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', margin: '0 0 0.25rem 0' }}>Location</p><p style={{fontSize:'1rem',fontWeight:'bold',margin:'0'}}>{locationName}</p></div>
       </div>
 
