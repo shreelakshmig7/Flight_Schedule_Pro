@@ -1,0 +1,62 @@
+{
+  "activityTypes": [
+    {
+      "id": "act-001",
+      "name": "Dual Instruction — Local",
+      "displayType": 0,
+      "isActive": true
+    },
+    {
+      "id": "act-002",
+      "name": "Solo Flight",
+      "displayType": 0,
+      "isActive": true
+    },
+    {
+      "id": "act-003",
+      "name": "Discovery Flight",
+      "displayType": 0,
+      "isActive": true
+    },
+    {
+      "id": "act-004",
+      "name": "Ground Instruction",
+      "displayType": 2,
+      "isActive": true
+    },
+    {
+      "id": "act-005",
+      "name": "Maintenance",
+      "displayType": 1,
+      "isActive": true
+    },
+    {
+      "id": "act-006",
+      "name": "Dual Instruction — Cross Country",
+      "displayType": 0,
+      "isActive": true
+    },
+    {
+      "id": "act-007",
+      "name": "Stage Check",
+      "displayType": 0,
+      "isActive": true
+    }
+  ],
+  "schedulingGroups": [
+    {
+      "id": "grp-001",
+      "name": "Cessna 172 Fleet",
+      "aircraftIds": ["ac-001", "ac-002"],
+      "activityTypeIds": ["act-001", "act-002", "act-003", "act-006"],
+      "isActive": true
+    },
+    {
+      "id": "grp-002",
+      "name": "Advanced Singles",
+      "aircraftIds": ["ac-003"],
+      "activityTypeIds": ["act-001", "act-006", "act-007"],
+      "isActive": true
+    }
+  ]
+}

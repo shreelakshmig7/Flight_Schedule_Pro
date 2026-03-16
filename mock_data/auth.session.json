@@ -1,0 +1,10 @@
+{
+  "token": "mock-fsp-bearer-token-test-operator-001",
+  "user": {
+    "id": "usr-scheduler-001",
+    "email": "scheduler@skyline-flight-academy.com",
+    "firstName": "Alex",
+    "lastName": "Reynolds",
+    "role": "Scheduler"
+  }
+}

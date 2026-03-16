@@ -1,13 +1,1309 @@
-# Agentic Scheduler — FSP Integration — Eval golden dataset
-# ----------------------------------------------------------
-# Test cases follow the format defined in CODING_STANDARDS.md §12.
-# Cases are added as use case handlers are implemented (PRs 13-16).
+# =============================================================================
+# golden_data.yaml
+# Agentic Scheduler — FSP Integration — Evaluation Dataset
+# =============================================================================
 #
-# Categories: happy_path | edge_case | adversarial | constraint_violation | rate_limit | fallback
+# Version:  1.0
+# Format:   Gauntlet YAML (eval harness)
+# License:  MIT
+#
+# Privacy Notice
+# --------------
+# All student names, identifiers, and flight data in this file are
+# ENTIRELY FICTIONAL and generated solely for testing purposes.
+# No real student or operator data is present. Synthetic IDs
+# (usr-student-001, res-001, enroll-001, etc.) are used deliberately
+# to facilitate automated evaluation without creating any privacy risk.
+# This file is safe for public repositories.
+#
+# Dataset Summary
+# ---------------
+# Total cases : 40
+# Categories  :
+#   happy_path          — 10 cases  (fsp-001 to fsp-010)
+#   edge_case           — 12 cases  (fsp-011 to fsp-022)
+#   adversarial         —  6 cases  (fsp-023 to fsp-028)
+#   constraint_violation—  8 cases  (fsp-029 to fsp-036)
+#   rate_limit          —  2 cases  (fsp-037 to fsp-038)
+#   fallback            —  4 cases  (fsp-039 to fsp-042)
+#
+# PR Coverage
+# -----------
+# PR-8  (Polling Dispatcher)         : fsp-037, fsp-038
+# PR-9  (Change Detection)           : fsp-011, fsp-012, fsp-013
+# PR-10 (Suggestion State Machine)   : fsp-014, fsp-015, fsp-023
+# PR-11 (Priority Weight Engine)     : fsp-016, fsp-017
+# PR-12 (LLM Rationale Generator)   : fsp-039, fsp-040
+# PR-13 (Use Case A — Waitlist)      : fsp-001, fsp-002, fsp-003, fsp-029, fsp-030, fsp-031
+# PR-14 (Use Case B — Reschedule)   : fsp-004, fsp-005, fsp-018, fsp-032
+# PR-15 (Use Case C — Discovery)    : fsp-006, fsp-007, fsp-019, fsp-033, fsp-034
+# PR-16 (Use Case D — Next Lesson)  : fsp-008, fsp-009, fsp-010, fsp-020, fsp-035
+# PR-17 (Email Notifications)       : fsp-024, fsp-025
+# PR-18 (SMS Notifications)         : fsp-026, fsp-027
+# PR-19 (Approval Queue)            : fsp-021, fsp-022
+# PR-22 (Audit Log)                 : fsp-028
+# PR-23 (Observability)             : fsp-036
+# PR-8  (Rate Limit)                : fsp-037, fsp-038
+# PR-12 (Fallback)                  : fsp-039, fsp-040, fsp-041, fsp-042
+#
+# Change Log
+# ----------
+# v1.0 (fsp-001 to fsp-042): Initial dataset covering all four MVP use cases,
+#   polling architecture, constraint validation, LLM fallback, rate limiting,
+#   adversarial inputs, and notification handling.
+#
+# Optional Test Fields
+# --------------------
+#   expected_confidence_min  — pass if confidence_score >= this value
+#   expected_confidence_max  — pass if confidence_score <= this value
+#   expected_suggestion_count — pass if exactly N suggestions created
+#   expected_fsp_calls_excluded — FSP endpoints that must NOT be called
+# =============================================================================
 
-test_cases: []
-  # Test cases are added in:
-  # PR-13: Use Case A (waitlist automation)
-  # PR-14: Use Case B (reschedule on cancellation)
-  # PR-15: Use Case C (discovery flight)
-  # PR-16: Use Case D (next lesson)
+test_cases:
+
+  # ── Happy Path ──────────────────────────────────────────────────────────────
+
+  - id: "fsp-001"
+    category: "happy_path"
+    pr: "PR-13"
+    use_case: "waitlist"
+    description: >
+      A new opening is detected at loc-001. Student Tyler Brooks (usr-student-001)
+      is the top-ranked candidate — available at the slot time, next lesson matches
+      the opening activity type, instructor Marcus Chen and aircraft N1234A are both
+      free. A PENDING suggestion must be created within 30 seconds.
+    trigger:
+      changeType: "NEW_OPENING"
+      operatorId: "test-operator-001"
+      fspOperatorId: 1001
+      locationId: "loc-001"
+      slotStart: "2025-10-16T14:00:00Z"
+      slotEnd: "2025-10-16T16:00:00Z"
+      aircraftId: "ac-001"
+    expected_fsp_calls:
+      - FindATimeService.getAvailableSlots
+      - CivilTwilightService.getCivilTwilight
+      - AvailabilityService.getBatchAvailabilityWithOverrides
+      - AircraftService.getSquawks
+      - ReservationsService.validateReservation
+    must_contain:
+      - "PENDING"
+      - "usr-student-001"
+      - "usr-instr-001"
+      - "ac-001"
+      - "confidence_score"
+      - "rationale"
+    must_not_contain:
+      - "error"
+      - "uncaught exception"
+      - "undefined"
+      - "ac-003"
+    expected_suggestion_status: "PENDING"
+    expected_confidence_min: 0.6
+    difficulty: "happy_path"
+
+  - id: "fsp-002"
+    category: "happy_path"
+    pr: "PR-13"
+    use_case: "waitlist"
+    description: >
+      A new opening is detected. Multiple eligible candidates exist.
+      The candidate with the longest gap since their last flight (Devon Carter —
+      38 days) must be ranked highest when timeSinceLastFlight is the
+      dominant weight signal.
+    trigger:
+      changeType: "NEW_OPENING"
+      operatorId: "test-operator-001"
+      fspOperatorId: 1001
+      locationId: "loc-001"
+      slotStart: "2025-10-17T14:00:00Z"
+      slotEnd: "2025-10-17T16:00:00Z"
+      aircraftId: "ac-002"
+    expected_fsp_calls:
+      - FindATimeService.getAvailableSlots
+      - AvailabilityService.getBatchAvailabilityWithOverrides
+      - AircraftService.getSquawks
+      - ReservationsService.validateReservation
+    must_contain:
+      - "PENDING"
+      - "usr-student-005"
+      - "rationale"
+    must_not_contain:
+      - "error"
+      - "uncaught exception"
+      - "undefined"
+    expected_suggestion_status: "PENDING"
+    expected_confidence_min: 0.6
+    difficulty: "happy_path"
+
+  - id: "fsp-003"
+    category: "happy_path"
+    pr: "PR-13"
+    use_case: "waitlist"
+    description: >
+      A new opening is detected. The suggestion is approved by the scheduler.
+      FSP validateOnly must be called before the final reservation creation.
+      After approval, a RESERVATION_CREATED audit log entry must exist.
+    trigger:
+      changeType: "NEW_OPENING"
+      operatorId: "test-operator-001"
+      fspOperatorId: 1001
+      locationId: "loc-001"
+      slotStart: "2025-10-18T14:00:00Z"
+      slotEnd: "2025-10-18T16:00:00Z"
+      aircraftId: "ac-001"
+    expected_fsp_calls:
+      - ReservationsService.validateReservation
+      - ReservationsService.createReservation
+    must_contain:
+      - "APPROVED"
+      - "fsp_reservation_id"
+      - "RESERVATION_CREATED"
+      - "SUGGESTION_APPROVED"
+    must_not_contain:
+      - "error"
+      - "uncaught exception"
+      - "PENDING"
+    expected_suggestion_status: "APPROVED"
+    expected_confidence_min: 0.7
+    difficulty: "happy_path"
+
+  - id: "fsp-004"
+    category: "happy_path"
+    pr: "PR-14"
+    use_case: "reschedule"
+    description: >
+      Reservation res-005 is cancelled for student Tyler Brooks. The agent must
+      generate up to 3 compatible alternative slots within the operator-configured
+      search window. All alternatives must pass FSP validateOnly.
+    trigger:
+      changeType: "CANCELLATION"
+      operatorId: "test-operator-001"
+      fspOperatorId: 1001
+      reservationId: "res-005"
+      studentId: "usr-student-001"
+      locationId: "loc-001"
+      activityTypeId: "act-001"
+      originalStart: "2025-10-15T14:00:00Z"
+      originalEnd: "2025-10-15T16:00:00Z"
+      instructorId: "usr-instr-001"
+    expected_fsp_calls:
+      - FindATimeService.getAvailableSlots
+      - CivilTwilightService.getCivilTwilight
+      - AvailabilityService.getBatchAvailabilityWithOverrides
+      - ReservationsService.validateReservation
+    must_contain:
+      - "PENDING"
+      - "usr-student-001"
+      - "rationale"
+    must_not_contain:
+      - "error"
+      - "uncaught exception"
+      - "undefined"
+    expected_suggestion_status: "PENDING"
+    expected_suggestion_count: 3
+    expected_confidence_min: 0.6
+    difficulty: "happy_path"
+
+  - id: "fsp-005"
+    category: "happy_path"
+    pr: "PR-14"
+    use_case: "reschedule"
+    description: >
+      Reschedule with preferSameInstructor enabled. The agent must first attempt
+      to find slots with Marcus Chen (usr-instr-001). Available slots exist with
+      the same instructor — those must be prioritised in the suggestions.
+    trigger:
+      changeType: "CANCELLATION"
+      operatorId: "test-operator-001"
+      fspOperatorId: 1001
+      reservationId: "res-005"
+      studentId: "usr-student-001"
+      locationId: "loc-001"
+      activityTypeId: "act-001"
+      originalStart: "2025-10-15T14:00:00Z"
+      originalEnd: "2025-10-15T16:00:00Z"
+      instructorId: "usr-instr-001"
+      operatorPolicyConfig:
+        preferSameInstructor: true
+    expected_fsp_calls:
+      - FindATimeService.getAvailableSlots
+      - AvailabilityService.getBatchAvailabilityWithOverrides
+      - ReservationsService.validateReservation
+    must_contain:
+      - "PENDING"
+      - "usr-instr-001"
+    must_not_contain:
+      - "error"
+      - "uncaught exception"
+    expected_suggestion_status: "PENDING"
+    difficulty: "happy_path"
+
+  - id: "fsp-006"
+    category: "happy_path"
+    pr: "PR-15"
+    use_case: "discovery"
+    description: >
+      A prospect submits a discovery flight request with preferred dates all
+      within daylight hours at KPAO. The agent must generate up to 3 options
+      using only eligible instructors and aircraft from the operator's config.
+      All slots must fall within civil twilight.
+    trigger:
+      changeType: "DISCOVERY_REQUEST"
+      operatorId: "test-operator-001"
+      fspOperatorId: 1001
+      prospectId: "prospect-001"
+      locationId: "loc-001"
+      preferredDates:
+        - "2025-10-16"
+        - "2025-10-17"
+        - "2025-10-18"
+      operatorPolicyConfig:
+        discoveryEligibleInstructorIds: ["usr-instr-001", "usr-instr-002"]
+        discoveryEligibleAircraftIds: ["ac-001", "ac-002"]
+        discoverySearchWindowDays: 14
+    expected_fsp_calls:
+      - CivilTwilightService.getCivilTwilight
+      - FindATimeService.getAvailableSlots
+      - ReservationsService.validateReservation
+    must_contain:
+      - "PENDING"
+      - "prospect-001"
+      - "rationale"
+    must_not_contain:
+      - "error"
+      - "uncaught exception"
+      - "ac-003"
+    expected_suggestion_status: "PENDING"
+    expected_suggestion_count: 3
+    expected_confidence_min: 0.7
+    difficulty: "happy_path"
+
+  - id: "fsp-007"
+    category: "happy_path"
+    pr: "PR-15"
+    use_case: "discovery"
+    description: >
+      A prospect submits a discovery flight request with no preferred dates.
+      The agent must use the operator-configured search window (14 days from
+      request date) to find available daylight slots.
+    trigger:
+      changeType: "DISCOVERY_REQUEST"
+      operatorId: "test-operator-001"
+      fspOperatorId: 1001
+      prospectId: "prospect-002"
+      locationId: "loc-001"
+      preferredDates: []
+      operatorPolicyConfig:
+        discoveryEligibleInstructorIds: ["usr-instr-001", "usr-instr-002"]
+        discoveryEligibleAircraftIds: ["ac-001", "ac-002"]
+        discoverySearchWindowDays: 14
+    expected_fsp_calls:
+      - CivilTwilightService.getCivilTwilight
+      - FindATimeService.getAvailableSlots
+      - ReservationsService.validateReservation
+    must_contain:
+      - "PENDING"
+      - "prospect-002"
+    must_not_contain:
+      - "error"
+      - "uncaught exception"
+      - "undefined"
+    expected_suggestion_status: "PENDING"
+    difficulty: "happy_path"
+
+  - id: "fsp-008"
+    category: "happy_path"
+    pr: "PR-16"
+    use_case: "next_lesson"
+    description: >
+      Lesson 5 for Tyler Brooks (enroll-001) is marked complete via a
+      STATUS_CHANGE event on res-001. The agent must identify lesson-006
+      as the next required lesson from enrollment progress and create a
+      PENDING suggestion within 30 seconds.
+    trigger:
+      changeType: "STATUS_CHANGE"
+      operatorId: "test-operator-001"
+      fspOperatorId: 1001
+      reservationId: "res-001"
+      studentId: "usr-student-001"
+      enrollmentId: "enroll-001"
+      newStatus: "COMPLETED"
+    expected_fsp_calls:
+      - EnrollmentService.getEnrollmentProgress
+      - AvailabilityService.getBatchAvailabilityWithOverrides
+      - FindATimeService.getAvailableSlots
+      - CivilTwilightService.getCivilTwilight
+      - ReservationsService.validateReservation
+    must_contain:
+      - "PENDING"
+      - "lesson-006"
+      - "usr-student-001"
+      - "rationale"
+    must_not_contain:
+      - "error"
+      - "uncaught exception"
+      - "lesson-005"
+    expected_suggestion_status: "PENDING"
+    expected_confidence_min: 0.6
+    difficulty: "happy_path"
+
+  - id: "fsp-009"
+    category: "happy_path"
+    pr: "PR-16"
+    use_case: "next_lesson"
+    description: >
+      The hourly scheduled scan identifies Devon Carter (usr-student-005)
+      as having no upcoming reservation and a pending lesson (lesson-015 —
+      Stage Check). The agent must create a suggestion using AutoSchedule
+      since Devon has 3+ pending lessons remaining.
+    trigger:
+      changeType: "SCHEDULED_SCAN"
+      operatorId: "test-operator-001"
+      fspOperatorId: 1001
+      locationId: "loc-001"
+    expected_fsp_calls:
+      - SchedulableEventsService.getSchedulableEvents
+      - EnrollmentService.getEnrollmentProgress
+      - AvailabilityService.getBatchAvailabilityWithOverrides
+      - AutoScheduleService.execute
+      - ReservationsService.validateReservation
+    must_contain:
+      - "PENDING"
+      - "usr-student-005"
+      - "lesson-015"
+    must_not_contain:
+      - "error"
+      - "uncaught exception"
+      - "undefined"
+    expected_suggestion_status: "PENDING"
+    difficulty: "happy_path"
+
+  - id: "fsp-010"
+    category: "happy_path"
+    pr: "PR-16"
+    use_case: "next_lesson"
+    description: >
+      Next lesson scheduling with instructor continuity preference enabled.
+      Tyler Brooks previously flew with Marcus Chen (usr-instr-001).
+      The agent must prioritise Marcus Chen's available slots before
+      falling back to other instructors.
+    trigger:
+      changeType: "STATUS_CHANGE"
+      operatorId: "test-operator-001"
+      fspOperatorId: 1001
+      reservationId: "res-001"
+      studentId: "usr-student-001"
+      enrollmentId: "enroll-001"
+      newStatus: "COMPLETED"
+      operatorPolicyConfig:
+        preferContinuityInstructor: true
+    expected_fsp_calls:
+      - EnrollmentService.getEnrollmentProgress
+      - EnrollmentService.getTrainingSessions
+      - FindATimeService.getAvailableSlots
+      - ReservationsService.validateReservation
+    must_contain:
+      - "PENDING"
+      - "usr-instr-001"
+      - "lesson-006"
+    must_not_contain:
+      - "error"
+      - "uncaught exception"
+    expected_suggestion_status: "PENDING"
+    difficulty: "happy_path"
+
+  # ── Edge Cases ──────────────────────────────────────────────────────────────
+
+  - id: "fsp-011"
+    category: "edge_case"
+    pr: "PR-9"
+    use_case: "change_detection"
+    description: >
+      The polling response is identical to the previous poll (same hash).
+      No ChangeEventMessage must be published and operators.last_poll_hash
+      must remain unchanged.
+    trigger:
+      changeType: "POLL_IDENTICAL"
+      operatorId: "test-operator-001"
+      fspOperatorId: 1001
+      previousHash: "abc123"
+      newHash: "abc123"
+    expected_fsp_calls: []
+    must_contain:
+      - "no changes detected"
+    must_not_contain:
+      - "CANCELLATION"
+      - "NEW_OPENING"
+      - "error"
+      - "ChangeEventMessage published"
+    difficulty: "edge_case"
+
+  - id: "fsp-012"
+    category: "edge_case"
+    pr: "PR-9"
+    use_case: "change_detection"
+    description: >
+      The FSP reservations response contains a duplicate reservation entry
+      (same reservationId appears twice). After deduplication, only one
+      ChangeEventMessage must be emitted — not two.
+    trigger:
+      changeType: "CANCELLATION"
+      operatorId: "test-operator-001"
+      fspOperatorId: 1001
+      reservationId: "res-005"
+      duplicateEntry: true
+    expected_fsp_calls: []
+    must_contain:
+      - "deduplicated"
+      - "1 change detected"
+    must_not_contain:
+      - "2 changes detected"
+      - "error"
+      - "uncaught exception"
+    difficulty: "edge_case"
+
+  - id: "fsp-013"
+    category: "edge_case"
+    pr: "PR-9"
+    use_case: "change_detection"
+    description: >
+      A maintenance reservation (res-007 — no pilotId, activityType = Maintenance)
+      is cancelled. This must NOT produce a CANCELLATION ChangeEventMessage
+      because the cancelled reservation had no student assigned.
+    trigger:
+      changeType: "CANCELLATION"
+      operatorId: "test-operator-001"
+      fspOperatorId: 1001
+      reservationId: "res-007"
+      studentId: null
+      activityTypeId: "act-005"
+    expected_fsp_calls: []
+    must_contain:
+      - "maintenance block"
+      - "skipped"
+    must_not_contain:
+      - "CANCELLATION published"
+      - "suggestion created"
+      - "error"
+    difficulty: "edge_case"
+
+  - id: "fsp-014"
+    category: "edge_case"
+    pr: "PR-10"
+    use_case: "suggestion_state_machine"
+    description: >
+      A scheduler attempts to approve a suggestion that has already been
+      approved. The API must return HTTP 409 and no duplicate reservation
+      must be created in FSP.
+    trigger:
+      changeType: "APPROVE_ALREADY_APPROVED"
+      operatorId: "test-operator-001"
+      suggestionId: "sugg-already-approved-001"
+      actorId: "usr-scheduler-001"
+    expected_fsp_calls: []
+    must_contain:
+      - "409"
+      - "already approved"
+    must_not_contain:
+      - "reservation created"
+      - "200"
+      - "error"
+      - "uncaught exception"
+    difficulty: "edge_case"
+
+  - id: "fsp-015"
+    category: "edge_case"
+    pr: "PR-10"
+    use_case: "suggestion_state_machine"
+    description: >
+      A PENDING suggestion has passed its expires_at timestamp. The expiry
+      job must transition it to EXPIRED and write a SUGGESTION_EXPIRED
+      audit log entry. No further approval must be possible after expiry.
+    trigger:
+      changeType: "EXPIRY_JOB_RUN"
+      operatorId: "test-operator-001"
+      expiredSuggestionId: "sugg-expired-001"
+    expected_fsp_calls: []
+    must_contain:
+      - "EXPIRED"
+      - "SUGGESTION_EXPIRED"
+    must_not_contain:
+      - "PENDING"
+      - "error"
+      - "uncaught exception"
+    difficulty: "edge_case"
+
+  - id: "fsp-016"
+    category: "edge_case"
+    pr: "PR-11"
+    use_case: "priority_weight"
+    description: >
+      A student has no flight history (brand new student with 0 completed
+      sessions). The priority weight engine must not exclude them — instead
+      assign a neutral score of 0.5 for the timeSinceLastFlight signal
+      and still include them in the ranked candidate list.
+    trigger:
+      changeType: "NEW_OPENING"
+      operatorId: "test-operator-001"
+      fspOperatorId: 1001
+      locationId: "loc-001"
+      slotStart: "2025-10-16T14:00:00Z"
+      slotEnd: "2025-10-16T16:00:00Z"
+      candidateWithNoHistory: true
+      studentId: "usr-student-new-001"
+    expected_fsp_calls:
+      - AvailabilityService.getBatchAvailabilityWithOverrides
+    must_contain:
+      - "neutral score"
+      - "usr-student-new-001"
+      - "0.5"
+    must_not_contain:
+      - "excluded"
+      - "error"
+      - "uncaught exception"
+    difficulty: "edge_case"
+
+  - id: "fsp-017"
+    category: "edge_case"
+    pr: "PR-11"
+    use_case: "priority_weight"
+    description: >
+      Two candidates have identical priority scores after all weight signals
+      are applied. The engine must use student ID as a deterministic tiebreaker —
+      the student with the lower ID must always rank first.
+    trigger:
+      changeType: "NEW_OPENING"
+      operatorId: "test-operator-001"
+      fspOperatorId: 1001
+      locationId: "loc-001"
+      slotStart: "2025-10-16T14:00:00Z"
+      slotEnd: "2025-10-16T16:00:00Z"
+      tiedCandidates:
+        - "usr-student-001"
+        - "usr-student-002"
+    expected_fsp_calls:
+      - AvailabilityService.getBatchAvailabilityWithOverrides
+    must_contain:
+      - "usr-student-001"
+      - "tiebreaker"
+    must_not_contain:
+      - "random"
+      - "error"
+      - "uncaught exception"
+    difficulty: "edge_case"
+
+  - id: "fsp-018"
+    category: "edge_case"
+    pr: "PR-14"
+    use_case: "reschedule"
+    description: >
+      Reschedule with preferSameInstructor enabled but no slots available
+      with the same instructor within the search window. The agent must
+      fall back to any eligible instructor and still create suggestions.
+    trigger:
+      changeType: "CANCELLATION"
+      operatorId: "test-operator-001"
+      fspOperatorId: 1001
+      reservationId: "res-005"
+      studentId: "usr-student-001"
+      locationId: "loc-001"
+      activityTypeId: "act-001"
+      originalStart: "2025-10-15T14:00:00Z"
+      originalEnd: "2025-10-15T16:00:00Z"
+      instructorId: "usr-instr-001"
+      operatorPolicyConfig:
+        preferSameInstructor: true
+      sameInstructorSlotsAvailable: false
+    expected_fsp_calls:
+      - FindATimeService.getAvailableSlots
+      - ReservationsService.validateReservation
+    must_contain:
+      - "PENDING"
+      - "instructor fallback"
+    must_not_contain:
+      - "no suggestions created"
+      - "error"
+      - "uncaught exception"
+    expected_suggestion_status: "PENDING"
+    difficulty: "edge_case"
+
+  - id: "fsp-019"
+    category: "edge_case"
+    pr: "PR-15"
+    use_case: "discovery"
+    description: >
+      A prospect's preferred dates are all within civil twilight but the
+      operator has no eligible aircraft configured for discovery flights.
+      No suggestions must be created and the event must be logged.
+    trigger:
+      changeType: "DISCOVERY_REQUEST"
+      operatorId: "test-operator-001"
+      fspOperatorId: 1001
+      prospectId: "prospect-003"
+      locationId: "loc-001"
+      preferredDates:
+        - "2025-10-16"
+        - "2025-10-17"
+      operatorPolicyConfig:
+        discoveryEligibleInstructorIds: ["usr-instr-001"]
+        discoveryEligibleAircraftIds: []
+        discoverySearchWindowDays: 14
+    expected_fsp_calls:
+      - CivilTwilightService.getCivilTwilight
+    must_contain:
+      - "no eligible aircraft"
+      - "no suggestions created"
+    must_not_contain:
+      - "PENDING"
+      - "error"
+      - "uncaught exception"
+    difficulty: "edge_case"
+
+  - id: "fsp-020"
+    category: "edge_case"
+    pr: "PR-16"
+    use_case: "next_lesson"
+    description: >
+      The hourly scan identifies Tyler Brooks as needing their next lesson.
+      A PENDING suggestion for that same lesson already exists in the database.
+      The scan must not create a duplicate — idempotency must be enforced.
+    trigger:
+      changeType: "SCHEDULED_SCAN"
+      operatorId: "test-operator-001"
+      fspOperatorId: 1001
+      locationId: "loc-001"
+      existingPendingSuggestion:
+        studentId: "usr-student-001"
+        lessonId: "lesson-006"
+        status: "PENDING"
+    expected_fsp_calls:
+      - SchedulableEventsService.getSchedulableEvents
+    must_contain:
+      - "duplicate skipped"
+      - "usr-student-001"
+      - "lesson-006"
+    must_not_contain:
+      - "second suggestion created"
+      - "error"
+      - "uncaught exception"
+    difficulty: "edge_case"
+
+  - id: "fsp-021"
+    category: "edge_case"
+    pr: "PR-19"
+    use_case: "approval_queue"
+    description: >
+      A scheduler from operator A attempts to access suggestion data belonging
+      to operator B. The API must return no results for operator B's suggestions
+      — tenant isolation must be enforced.
+    trigger:
+      changeType: "CROSS_TENANT_ACCESS_ATTEMPT"
+      requestingOperatorId: "test-operator-001"
+      targetOperatorId: "test-operator-002"
+    expected_fsp_calls: []
+    must_contain:
+      - "empty results"
+      - "0 suggestions"
+    must_not_contain:
+      - "operator-002 suggestion"
+      - "error"
+      - "uncaught exception"
+    difficulty: "edge_case"
+
+  - id: "fsp-022"
+    category: "edge_case"
+    pr: "PR-19"
+    use_case: "approval_queue"
+    description: >
+      A scheduler attempts to reject a suggestion without providing a reason.
+      The API must return HTTP 400 and no state transition must occur.
+    trigger:
+      changeType: "REJECT_WITHOUT_REASON"
+      operatorId: "test-operator-001"
+      suggestionId: "sugg-pending-001"
+      actorId: "usr-scheduler-001"
+      reason: ""
+    expected_fsp_calls: []
+    must_contain:
+      - "400"
+      - "reason required"
+    must_not_contain:
+      - "REJECTED"
+      - "200"
+      - "error"
+      - "uncaught exception"
+    difficulty: "edge_case"
+
+  # ── Adversarial ─────────────────────────────────────────────────────────────
+
+  - id: "fsp-023"
+    category: "adversarial"
+    pr: "PR-10"
+    use_case: "suggestion_state_machine"
+    description: >
+      A crafted request attempts to approve a suggestion belonging to a
+      different operator by guessing its UUID. The auth guard and tenant
+      middleware must block this — HTTP 404 (not 403, to avoid leaking
+      existence of the resource).
+    trigger:
+      changeType: "CROSS_TENANT_APPROVE_ATTEMPT"
+      requestingOperatorId: "test-operator-002"
+      targetSuggestionOperatorId: "test-operator-001"
+      suggestionId: "sugg-pending-001"
+    expected_fsp_calls: []
+    must_contain:
+      - "404"
+    must_not_contain:
+      - "APPROVED"
+      - "200"
+      - "403"
+      - "suggestion found"
+    difficulty: "adversarial"
+
+  - id: "fsp-024"
+    category: "adversarial"
+    pr: "PR-17"
+    use_case: "email_notifications"
+    description: >
+      The student's name field in the FSP response contains a crafted HTML
+      injection string. The email template renderer must sanitise all
+      placeholder values before rendering — the injection string must not
+      appear in the rendered email output.
+    trigger:
+      changeType: "APPROVE_WITH_INJECTED_STUDENT_NAME"
+      operatorId: "test-operator-001"
+      suggestionId: "sugg-pending-injection-001"
+      studentName: "<script>alert('xss')</script>"
+    expected_fsp_calls:
+      - ReservationsService.validateReservation
+      - ReservationsService.createReservation
+    must_contain:
+      - "sanitised"
+      - "email sent"
+    must_not_contain:
+      - "<script>"
+      - "alert"
+      - "xss"
+      - "error"
+    difficulty: "adversarial"
+
+  - id: "fsp-025"
+    category: "adversarial"
+    pr: "PR-17"
+    use_case: "email_notifications"
+    description: >
+      The email dispatch fails (provider returns 500). The approval flow
+      must NOT be blocked — the reservation is still created in FSP, a
+      FAILED communications record is written, and the audit log records
+      the notification failure.
+    trigger:
+      changeType: "APPROVE_WITH_EMAIL_FAILURE"
+      operatorId: "test-operator-001"
+      suggestionId: "sugg-pending-002"
+      emailProviderFailure: true
+    expected_fsp_calls:
+      - ReservationsService.validateReservation
+      - ReservationsService.createReservation
+    must_contain:
+      - "APPROVED"
+      - "FAILED"
+      - "communications record"
+      - "fsp_reservation_id"
+    must_not_contain:
+      - "approval blocked"
+      - "uncaught exception"
+    difficulty: "adversarial"
+
+  - id: "fsp-026"
+    category: "adversarial"
+    pr: "PR-18"
+    use_case: "sms_notifications"
+    description: >
+      A student has not opted in to SMS notifications. The SMS service must
+      check the opt-in status before sending and must skip the send entirely.
+      A communications record must NOT be created for an unsent SMS.
+    trigger:
+      changeType: "APPROVE_STUDENT_NO_SMS_OPTIN"
+      operatorId: "test-operator-001"
+      suggestionId: "sugg-pending-003"
+      studentId: "usr-student-no-optin"
+    expected_fsp_calls:
+      - ReservationsService.validateReservation
+      - ReservationsService.createReservation
+    must_contain:
+      - "opt-in check failed"
+      - "SMS skipped"
+    must_not_contain:
+      - "SMS sent"
+      - "communications record created"
+      - "error"
+    difficulty: "adversarial"
+
+  - id: "fsp-027"
+    category: "adversarial"
+    pr: "PR-18"
+    use_case: "sms_notifications"
+    description: >
+      The operator's SMS template renders to a message that exceeds 160
+      characters. The SMS service must truncate to 157 characters and append
+      '...' before sending — no multi-part SMS charges.
+    trigger:
+      changeType: "APPROVE_WITH_LONG_SMS_TEMPLATE"
+      operatorId: "test-operator-001"
+      suggestionId: "sugg-pending-004"
+      smsTemplateLength: 220
+    expected_fsp_calls:
+      - ReservationsService.validateReservation
+      - ReservationsService.createReservation
+    must_contain:
+      - "truncated"
+      - "157 characters"
+      - "..."
+      - "SMS sent"
+    must_not_contain:
+      - "220 characters"
+      - "multi-part"
+      - "error"
+    difficulty: "adversarial"
+
+  - id: "fsp-028"
+    category: "adversarial"
+    pr: "PR-22"
+    use_case: "audit_log"
+    description: >
+      A direct database update is attempted on an audit_log record.
+      The PostgreSQL trigger must fire and raise an exception. The
+      Prisma middleware must also independently block any update call
+      on the AuditLog model.
+    trigger:
+      changeType: "AUDIT_LOG_MUTATION_ATTEMPT"
+      operatorId: "test-operator-001"
+      auditLogId: "audit-001"
+      attemptType: "UPDATE"
+    expected_fsp_calls: []
+    must_contain:
+      - "audit_log records are immutable"
+      - "exception raised"
+    must_not_contain:
+      - "update successful"
+      - "200"
+      - "record modified"
+    difficulty: "adversarial"
+
+  # ── Constraint Violations ───────────────────────────────────────────────────
+
+  - id: "fsp-029"
+    category: "constraint_violation"
+    pr: "PR-13"
+    use_case: "waitlist"
+    description: >
+      The top-ranked candidate for a waitlist opening is unavailable at the
+      proposed slot time (their availability window excludes this time).
+      The agent must skip them and try the next candidate.
+    trigger:
+      changeType: "NEW_OPENING"
+      operatorId: "test-operator-001"
+      fspOperatorId: 1001
+      locationId: "loc-001"
+      slotStart: "2025-10-16T08:00:00Z"
+      slotEnd: "2025-10-16T10:00:00Z"
+      aircraftId: "ac-001"
+      topCandidateUnavailable: true
+    expected_fsp_calls:
+      - AvailabilityService.getBatchAvailabilityWithOverrides
+      - ReservationsService.validateReservation
+    must_contain:
+      - "PENDING"
+      - "candidate skipped"
+      - "availability constraint"
+    must_not_contain:
+      - "unavailable student proposed"
+      - "error"
+      - "uncaught exception"
+    expected_suggestion_status: "PENDING"
+    difficulty: "constraint_violation"
+
+  - id: "fsp-030"
+    category: "constraint_violation"
+    pr: "PR-13"
+    use_case: "waitlist"
+    description: >
+      The only available aircraft for the opening is ac-003, which has an
+      open squawk. The agent must not propose ac-003 and must check squawks
+      before including any aircraft in the suggestion.
+    trigger:
+      changeType: "NEW_OPENING"
+      operatorId: "test-operator-001"
+      fspOperatorId: 1001
+      locationId: "loc-001"
+      slotStart: "2025-10-16T14:00:00Z"
+      slotEnd: "2025-10-16T16:00:00Z"
+      availableAircraftIds: ["ac-003"]
+    expected_fsp_calls:
+      - AircraftService.getSquawks
+    must_contain:
+      - "open squawk"
+      - "ac-003 excluded"
+      - "no suggestions created"
+    must_not_contain:
+      - "ac-003 proposed"
+      - "PENDING"
+      - "error"
+    difficulty: "constraint_violation"
+
+  - id: "fsp-031"
+    category: "constraint_violation"
+    pr: "PR-13"
+    use_case: "waitlist"
+    description: >
+      All three top-ranked candidates fail FSP validateOnly for the proposed
+      slot. After 3 failed attempts the agent must log the event and create
+      no suggestion — not crash or retry indefinitely.
+    trigger:
+      changeType: "NEW_OPENING"
+      operatorId: "test-operator-001"
+      fspOperatorId: 1001
+      locationId: "loc-001"
+      slotStart: "2025-10-16T14:00:00Z"
+      slotEnd: "2025-10-16T16:00:00Z"
+      aircraftId: "ac-001"
+      allValidationsFail: true
+    expected_fsp_calls:
+      - ReservationsService.validateReservation
+    must_contain:
+      - "3 candidates attempted"
+      - "no suggestion created"
+      - "validation failed"
+    must_not_contain:
+      - "PENDING"
+      - "4 attempts"
+      - "uncaught exception"
+    difficulty: "constraint_violation"
+
+  - id: "fsp-032"
+    category: "constraint_violation"
+    pr: "PR-14"
+    use_case: "reschedule"
+    description: >
+      No alternative slots are found within the operator's reschedule search
+      window for the cancelled reservation. The agent must log the event and
+      create no suggestions — not crash.
+    trigger:
+      changeType: "CANCELLATION"
+      operatorId: "test-operator-001"
+      fspOperatorId: 1001
+      reservationId: "res-005"
+      studentId: "usr-student-001"
+      locationId: "loc-001"
+      activityTypeId: "act-001"
+      originalStart: "2025-10-15T14:00:00Z"
+      originalEnd: "2025-10-15T16:00:00Z"
+      noSlotsAvailable: true
+    expected_fsp_calls:
+      - FindATimeService.getAvailableSlots
+    must_contain:
+      - "no slots found"
+      - "no suggestions created"
+    must_not_contain:
+      - "PENDING"
+      - "error"
+      - "uncaught exception"
+    difficulty: "constraint_violation"
+
+  - id: "fsp-033"
+    category: "constraint_violation"
+    pr: "PR-15"
+    use_case: "discovery"
+    description: >
+      All of the prospect's preferred dates fall entirely outside civil
+      twilight hours for KPAO (e.g. all slots are at 3am UTC which is
+      before sunrise). No discovery flight suggestions must be created
+      and the reason must be logged.
+    trigger:
+      changeType: "DISCOVERY_REQUEST"
+      operatorId: "test-operator-001"
+      fspOperatorId: 1001
+      prospectId: "prospect-004"
+      locationId: "loc-001"
+      preferredDates:
+        - "2025-10-16"
+      preferredTimeUtc: "03:00"
+      operatorPolicyConfig:
+        discoveryEligibleInstructorIds: ["usr-instr-001"]
+        discoveryEligibleAircraftIds: ["ac-001"]
+    expected_fsp_calls:
+      - CivilTwilightService.getCivilTwilight
+    must_contain:
+      - "outside civil twilight"
+      - "no suggestions created"
+      - "daylight constraint"
+    must_not_contain:
+      - "PENDING"
+      - "error"
+      - "uncaught exception"
+    difficulty: "constraint_violation"
+
+  - id: "fsp-034"
+    category: "constraint_violation"
+    pr: "PR-15"
+    use_case: "discovery"
+    description: >
+      An operator attempts to configure a discovery flight with an instructor
+      who is not in the eligible instructor list. The agent must filter them
+      out and only propose slots with eligible instructors.
+    trigger:
+      changeType: "DISCOVERY_REQUEST"
+      operatorId: "test-operator-001"
+      fspOperatorId: 1001
+      prospectId: "prospect-005"
+      locationId: "loc-001"
+      preferredDates:
+        - "2025-10-17"
+      operatorPolicyConfig:
+        discoveryEligibleInstructorIds: ["usr-instr-002"]
+        discoveryEligibleAircraftIds: ["ac-001", "ac-002"]
+    expected_fsp_calls:
+      - CivilTwilightService.getCivilTwilight
+      - FindATimeService.getAvailableSlots
+      - ReservationsService.validateReservation
+    must_contain:
+      - "PENDING"
+      - "usr-instr-002"
+    must_not_contain:
+      - "usr-instr-001"
+      - "usr-instr-003"
+      - "error"
+    expected_suggestion_status: "PENDING"
+    difficulty: "constraint_violation"
+
+  - id: "fsp-035"
+    category: "constraint_violation"
+    pr: "PR-16"
+    use_case: "next_lesson"
+    description: >
+      The AutoSchedule solver returns results with duplicate eventIds for
+      the same student. The agent must deduplicate by eventId before creating
+      suggestions — only one suggestion per unique eventId.
+    trigger:
+      changeType: "SCHEDULED_SCAN"
+      operatorId: "test-operator-001"
+      fspOperatorId: 1001
+      locationId: "loc-001"
+      autoScheduleResponseHasDuplicates: true
+    expected_fsp_calls:
+      - AutoScheduleService.execute
+    must_contain:
+      - "deduplicated"
+      - "eventId"
+      - "1 suggestion created"
+    must_not_contain:
+      - "2 suggestions created"
+      - "duplicate suggestion"
+      - "error"
+    difficulty: "constraint_violation"
+
+  - id: "fsp-036"
+    category: "constraint_violation"
+    pr: "PR-23"
+    use_case: "observability"
+    description: >
+      The polling dispatcher receives a 429 response from FSP more than 3
+      times within one hour. The configured Application Insights alert must
+      fire. The alert threshold is polling.429_count > 3 per hour.
+    trigger:
+      changeType: "RATE_LIMIT_ALERT_THRESHOLD"
+      operatorId: "test-operator-001"
+      fspOperatorId: 1001
+      count429InLastHour: 4
+    expected_fsp_calls: []
+    must_contain:
+      - "alert fired"
+      - "polling.429_count"
+      - "threshold exceeded"
+    must_not_contain:
+      - "alert suppressed"
+      - "error"
+      - "uncaught exception"
+    difficulty: "constraint_violation"
+
+  # ── Rate Limit ──────────────────────────────────────────────────────────────
+
+  - id: "fsp-037"
+    category: "rate_limit"
+    pr: "PR-8"
+    use_case: "polling_dispatcher"
+    description: >
+      The token bucket is exhausted (0 tokens remaining). A new poll job
+      arrives. The dispatcher must wait until the bucket refills (up to 60
+      seconds) rather than making the FSP call immediately. No call must be
+      made while the bucket is empty.
+    trigger:
+      changeType: "TOKEN_BUCKET_EXHAUSTED"
+      operatorId: "test-operator-001"
+      tokenBucketTokens: 0
+    expected_fsp_calls: []
+    expected_fsp_calls_excluded:
+      - ReservationsService.listReservations
+    must_contain:
+      - "token bucket empty"
+      - "waiting for refill"
+    must_not_contain:
+      - "FSP call made"
+      - "429"
+      - "error"
+      - "uncaught exception"
+    difficulty: "rate_limit"
+
+  - id: "fsp-038"
+    category: "rate_limit"
+    pr: "PR-8"
+    use_case: "polling_dispatcher"
+    description: >
+      FSP returns a 429 response during a poll. The dispatcher must pause
+      all outgoing FSP requests for exactly 60 seconds, re-enqueue the failed
+      poll job at the back of the queue, and log the incident to Application
+      Insights. No FSP calls must be made during the 60-second pause window.
+    trigger:
+      changeType: "FSP_429_RESPONSE"
+      operatorId: "test-operator-001"
+      fspOperatorId: 1001
+    expected_fsp_calls: []
+    expected_fsp_calls_excluded:
+      - ReservationsService.listReservations
+    must_contain:
+      - "429 received"
+      - "pausing 60 seconds"
+      - "poll job re-enqueued"
+      - "Application Insights logged"
+    must_not_contain:
+      - "FSP call during pause"
+      - "uncaught exception"
+      - "poll job lost"
+    difficulty: "rate_limit"
+
+  # ── Fallback ────────────────────────────────────────────────────────────────
+
+  - id: "fsp-039"
+    category: "fallback"
+    pr: "PR-12"
+    use_case: "llm_rationale"
+    description: >
+      The Anthropic API returns a 500 error (LLM unavailable). The rationale
+      generator must fall back to the deterministic template within the
+      10-second timeout. The suggestion must still be created with a
+      template-generated rationale — not blocked.
+    trigger:
+      changeType: "NEW_OPENING"
+      operatorId: "test-operator-001"
+      fspOperatorId: 1001
+      locationId: "loc-001"
+      slotStart: "2025-10-16T14:00:00Z"
+      slotEnd: "2025-10-16T16:00:00Z"
+      anthropicApiFailure: true
+    expected_fsp_calls:
+      - FindATimeService.getAvailableSlots
+      - ReservationsService.validateReservation
+    must_contain:
+      - "PENDING"
+      - "fallback template"
+      - "rationale"
+    must_not_contain:
+      - "LLM error blocked suggestion"
+      - "rationale missing"
+      - "uncaught exception"
+    expected_suggestion_status: "PENDING"
+    difficulty: "fallback"
+
+  - id: "fsp-040"
+    category: "fallback"
+    pr: "PR-12"
+    use_case: "llm_rationale"
+    description: >
+      The Anthropic API returns a response but the JSON output is malformed
+      (missing required fields). The schema validation must detect this and
+      fall back to the deterministic template without throwing an error.
+    trigger:
+      changeType: "NEW_OPENING"
+      operatorId: "test-operator-001"
+      fspOperatorId: 1001
+      locationId: "loc-001"
+      slotStart: "2025-10-17T14:00:00Z"
+      slotEnd: "2025-10-17T16:00:00Z"
+      anthropicMalformedJson: true
+    expected_fsp_calls:
+      - FindATimeService.getAvailableSlots
+      - ReservationsService.validateReservation
+    must_contain:
+      - "PENDING"
+      - "fallback template"
+      - "malformed LLM output"
+    must_not_contain:
+      - "JSON parse error propagated"
+      - "rationale missing"
+      - "uncaught exception"
+    expected_suggestion_status: "PENDING"
+    difficulty: "fallback"
+
+  - id: "fsp-041"
+    category: "fallback"
+    pr: "PR-12"
+    use_case: "llm_rationale"
+    description: >
+      The Anthropic API call exceeds the 10-second timeout. The rationale
+      generator must fall back to the deterministic template within that
+      timeout — not hang indefinitely.
+    trigger:
+      changeType: "NEW_OPENING"
+      operatorId: "test-operator-001"
+      fspOperatorId: 1001
+      locationId: "loc-001"
+      slotStart: "2025-10-18T14:00:00Z"
+      slotEnd: "2025-10-18T16:00:00Z"
+      anthropicTimeout: true
+    expected_fsp_calls:
+      - FindATimeService.getAvailableSlots
+      - ReservationsService.validateReservation
+    must_contain:
+      - "PENDING"
+      - "fallback template"
+      - "timeout"
+    must_not_contain:
+      - "hanging"
+      - "waited more than 10 seconds"
+      - "uncaught exception"
+    expected_suggestion_status: "PENDING"
+    difficulty: "fallback"
+
+  - id: "fsp-042"
+    category: "fallback"
+    pr: "PR-12"
+    use_case: "llm_rationale"
+    description: >
+      The LLM returns a confidence score of 0.9 (high) but only 3 out of 6
+      constraints (50%) passed. The confidence override rule must trigger —
+      the LLM confidence must be overridden with the deterministic score
+      (0.5) since fewer than 80% of constraints passed.
+    trigger:
+      changeType: "NEW_OPENING"
+      operatorId: "test-operator-001"
+      fspOperatorId: 1001
+      locationId: "loc-001"
+      slotStart: "2025-10-19T14:00:00Z"
+      slotEnd: "2025-10-19T16:00:00Z"
+      llmConfidenceOverride: true
+      llmConfidenceReturned: 0.9
+      constraintPassRate: 0.5
+    expected_fsp_calls:
+      - FindATimeService.getAvailableSlots
+      - ReservationsService.validateReservation
+    must_contain:
+      - "confidence overridden"
+      - "deterministic score"
+    must_not_contain:
+      - "confidence: 0.9"
+      - "LLM confidence accepted"
+      - "uncaught exception"
+    expected_confidence_max: 0.8
+    difficulty: "fallback"

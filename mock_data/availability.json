@@ -1,0 +1,101 @@
+{
+  "availabilityAndOverrides": [
+    {
+      "userGuidId": "usr-student-001",
+      "availabilities": [
+        { "dayOfWeek": 1, "startAtTimeUtc": "14:00", "endAtTimeUtc": "22:00" },
+        { "dayOfWeek": 2, "startAtTimeUtc": "14:00", "endAtTimeUtc": "22:00" },
+        { "dayOfWeek": 3, "startAtTimeUtc": "14:00", "endAtTimeUtc": "22:00" },
+        { "dayOfWeek": 4, "startAtTimeUtc": "14:00", "endAtTimeUtc": "22:00" },
+        { "dayOfWeek": 5, "startAtTimeUtc": "14:00", "endAtTimeUtc": "22:00" },
+        { "dayOfWeek": 6, "startAtTimeUtc": "13:00", "endAtTimeUtc": "22:00" },
+        { "dayOfWeek": 0, "startAtTimeUtc": "13:00", "endAtTimeUtc": "22:00" }
+      ],
+      "availabilityOverrides": []
+    },
+    {
+      "userGuidId": "usr-student-002",
+      "availabilities": [
+        { "dayOfWeek": 1, "startAtTimeUtc": "12:00", "endAtTimeUtc": "20:00" },
+        { "dayOfWeek": 3, "startAtTimeUtc": "12:00", "endAtTimeUtc": "20:00" },
+        { "dayOfWeek": 5, "startAtTimeUtc": "12:00", "endAtTimeUtc": "20:00" },
+        { "dayOfWeek": 6, "startAtTimeUtc": "14:00", "endAtTimeUtc": "22:00" },
+        { "dayOfWeek": 0, "startAtTimeUtc": "14:00", "endAtTimeUtc": "22:00" }
+      ],
+      "availabilityOverrides": [
+        {
+          "date": "2025-10-15",
+          "startTime": "2025-10-15T12:00:00Z",
+          "endTime": "2025-10-15T20:00:00Z",
+          "isUnavailable": true
+        }
+      ]
+    },
+    {
+      "userGuidId": "usr-student-003",
+      "availabilities": [
+        { "dayOfWeek": 1, "startAtTimeUtc": "13:00", "endAtTimeUtc": "23:00" },
+        { "dayOfWeek": 2, "startAtTimeUtc": "13:00", "endAtTimeUtc": "23:00" },
+        { "dayOfWeek": 4, "startAtTimeUtc": "13:00", "endAtTimeUtc": "23:00" },
+        { "dayOfWeek": 6, "startAtTimeUtc": "12:00", "endAtTimeUtc": "22:00" },
+        { "dayOfWeek": 0, "startAtTimeUtc": "12:00", "endAtTimeUtc": "22:00" }
+      ],
+      "availabilityOverrides": []
+    },
+    {
+      "userGuidId": "usr-student-004",
+      "availabilities": [
+        { "dayOfWeek": 2, "startAtTimeUtc": "14:00", "endAtTimeUtc": "22:00" },
+        { "dayOfWeek": 4, "startAtTimeUtc": "14:00", "endAtTimeUtc": "22:00" },
+        { "dayOfWeek": 6, "startAtTimeUtc": "13:00", "endAtTimeUtc": "21:00" },
+        { "dayOfWeek": 0, "startAtTimeUtc": "13:00", "endAtTimeUtc": "21:00" }
+      ],
+      "availabilityOverrides": []
+    },
+    {
+      "userGuidId": "usr-student-005",
+      "availabilities": [
+        { "dayOfWeek": 1, "startAtTimeUtc": "15:00", "endAtTimeUtc": "23:00" },
+        { "dayOfWeek": 3, "startAtTimeUtc": "15:00", "endAtTimeUtc": "23:00" },
+        { "dayOfWeek": 5, "startAtTimeUtc": "15:00", "endAtTimeUtc": "23:00" },
+        { "dayOfWeek": 0, "startAtTimeUtc": "14:00", "endAtTimeUtc": "22:00" }
+      ],
+      "availabilityOverrides": []
+    },
+    {
+      "userGuidId": "usr-instr-001",
+      "availabilities": [
+        { "dayOfWeek": 1, "startAtTimeUtc": "13:00", "endAtTimeUtc": "23:00" },
+        { "dayOfWeek": 2, "startAtTimeUtc": "13:00", "endAtTimeUtc": "23:00" },
+        { "dayOfWeek": 3, "startAtTimeUtc": "13:00", "endAtTimeUtc": "23:00" },
+        { "dayOfWeek": 4, "startAtTimeUtc": "13:00", "endAtTimeUtc": "23:00" },
+        { "dayOfWeek": 5, "startAtTimeUtc": "13:00", "endAtTimeUtc": "23:00" }
+      ],
+      "availabilityOverrides": []
+    },
+    {
+      "userGuidId": "usr-instr-002",
+      "availabilities": [
+        { "dayOfWeek": 1, "startAtTimeUtc": "14:00", "endAtTimeUtc": "23:00" },
+        { "dayOfWeek": 2, "startAtTimeUtc": "14:00", "endAtTimeUtc": "23:00" },
+        { "dayOfWeek": 4, "startAtTimeUtc": "14:00", "endAtTimeUtc": "23:00" },
+        { "dayOfWeek": 6, "startAtTimeUtc": "13:00", "endAtTimeUtc": "21:00" }
+      ],
+      "availabilityOverrides": []
+    },
+    {
+      "userGuidId": "usr-instr-003",
+      "availabilities": [
+        { "dayOfWeek": 2, "startAtTimeUtc": "13:00", "endAtTimeUtc": "22:00" },
+        { "dayOfWeek": 3, "startAtTimeUtc": "13:00", "endAtTimeUtc": "22:00" },
+        { "dayOfWeek": 5, "startAtTimeUtc": "13:00", "endAtTimeUtc": "22:00" },
+        { "dayOfWeek": 0, "startAtTimeUtc": "14:00", "endAtTimeUtc": "22:00" }
+      ],
+      "availabilityOverrides": []
+    }
+  ],
+  "reservationAvailability": {
+    "isAvailable": true,
+    "conflicts": []
+  }
+}

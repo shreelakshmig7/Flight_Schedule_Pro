@@ -1,0 +1,108 @@
+{
+  "aircraft": [
+    {
+      "id": "ac-001",
+      "registration": "N1234A",
+      "make": "Cessna",
+      "model": "172S",
+      "makeModel": "Cessna 172S",
+      "isActive": true,
+      "isSimulator": false
+    },
+    {
+      "id": "ac-002",
+      "registration": "N5678B",
+      "make": "Cessna",
+      "model": "172S",
+      "makeModel": "Cessna 172S",
+      "isActive": true,
+      "isSimulator": false
+    },
+    {
+      "id": "ac-003",
+      "registration": "N9012C",
+      "make": "Piper",
+      "model": "PA-28-181",
+      "makeModel": "Piper Archer III",
+      "isActive": true,
+      "isSimulator": false
+    },
+    {
+      "id": "ac-004",
+      "registration": "N3456D",
+      "make": "Cessna",
+      "model": "172S",
+      "makeModel": "Cessna 172S",
+      "isActive": false,
+      "isSimulator": false
+    },
+    {
+      "id": "ac-sim-001",
+      "registration": "SIM-001",
+      "make": "Redbird",
+      "model": "TD2",
+      "makeModel": "Redbird TD2",
+      "isActive": true,
+      "isSimulator": true
+    }
+  ],
+  "times": {
+    "ac-001": {
+      "aircraftId": "ac-001",
+      "totalTime": 1250.5,
+      "hobbs": 1250.5,
+      "tach": 1180.2
+    },
+    "ac-002": {
+      "aircraftId": "ac-002",
+      "totalTime": 876.3,
+      "hobbs": 876.3,
+      "tach": 820.1
+    },
+    "ac-003": {
+      "aircraftId": "ac-003",
+      "totalTime": 2340.8,
+      "hobbs": 2340.8,
+      "tach": 2200.0
+    }
+  },
+  "squawks": {
+    "ac-001": [],
+    "ac-002": [],
+    "ac-003": [
+      {
+        "id": "sqk-001",
+        "aircraftId": "ac-003",
+        "description": "Left landing light inoperative",
+        "reportedAt": "2025-10-10T09:00:00Z",
+        "isOpen": true,
+        "reportedBy": "usr-instr-001"
+      }
+    ],
+    "ac-004": [],
+    "ac-sim-001": []
+  },
+  "maintenanceReminders": {
+    "ac-001": [
+      {
+        "id": "maint-001",
+        "aircraftId": "ac-001",
+        "description": "100-hour inspection",
+        "dueAtHours": 1300.0,
+        "currentHours": 1250.5,
+        "hoursRemaining": 49.5,
+        "isDue": false
+      }
+    ],
+    "ac-002": [],
+    "ac-003": [
+      {
+        "id": "maint-002",
+        "aircraftId": "ac-003",
+        "description": "Annual inspection",
+        "dueDate": "2025-11-15",
+        "isDue": false
+      }
+    ]
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "findATimePreferences": {
+    "preferSameInstructor": true,
+    "preferSameAircraft": false,
+    "searchWindowDays": 7
+  },
+  "availableSlots": [
+    {
+      "startTime": "2025-10-16T14:00:00Z",
+      "endTime": "2025-10-16T16:00:00Z",
+      "instructorId": "usr-instr-001",
+      "aircraftId": "ac-001",
+      "locationId": "loc-001",
+      "activityTypeId": "act-001",
+      "score": 0.95
+    },
+    {
+      "startTime": "2025-10-16T16:30:00Z",
+      "endTime": "2025-10-16T18:30:00Z",
+      "instructorId": "usr-instr-002",
+      "aircraftId": "ac-002",
+      "locationId": "loc-001",
+      "activityTypeId": "act-001",
+      "score": 0.88
+    },
+    {
+      "startTime": "2025-10-17T14:00:00Z",
+      "endTime": "2025-10-17T16:00:00Z",
+      "instructorId": "usr-instr-001",
+      "aircraftId": "ac-002",
+      "locationId": "loc-001",
+      "activityTypeId": "act-001",
+      "score": 0.82
+    },
+    {
+      "startTime": "2025-10-17T16:30:00Z",
+      "endTime": "2025-10-17T18:30:00Z",
+      "instructorId": "usr-instr-002",
+      "aircraftId": "ac-001",
+      "locationId": "loc-001",
+      "activityTypeId": "act-001",
+      "score": 0.79
+    },
+    {
+      "startTime": "2025-10-18T14:00:00Z",
+      "endTime": "2025-10-18T16:00:00Z",
+      "instructorId": "usr-instr-001",
+      "aircraftId": "ac-001",
+      "locationId": "loc-001",
+      "activityTypeId": "act-001",
+      "score": 0.75
+    },
+    {
+      "startTime": "2025-10-19T14:00:00Z",
+      "endTime": "2025-10-19T16:00:00Z",
+      "instructorId": "usr-instr-002",
+      "aircraftId": "ac-002",
+      "locationId": "loc-001",
+      "activityTypeId": "act-003",
+      "score": 0.91
+    }
+  ]
+}
