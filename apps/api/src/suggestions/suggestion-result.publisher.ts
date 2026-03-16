@@ -28,10 +28,16 @@ import type { SuggestionResultMessage } from '@fsp-scheduler/shared-types';
 /** Logger name for this publisher. */
 const PUBLISHER_NAME = 'SuggestionResultPublisher';
 
+/** Connection string env var key — used as fallback when namespace is absent. */
+const CONNECTION_STRING_ENV_KEY = 'AZURE_SERVICE_BUS_CONNECTION_STRING';
+
 /**
  * NestJS injectable that owns a dedicated ServiceBusClient and sender for the
- * `suggestion-results` queue. Uses DefaultAzureCredential — no connection
- * strings stored in code or environment variables.
+ * `suggestion-results` queue. Prefers DefaultAzureCredential (managed identity)
+ * when AZURE_SERVICE_BUS_NAMESPACE is set; falls back to the connection string
+ * in AZURE_SERVICE_BUS_CONNECTION_STRING so the app starts without
+ * infrastructure changes. If neither is configured a placeholder is used and
+ * publishes will fail at call-time (not at startup) so all other routes stay up.
  *
  * Instantiated by SuggestionsModule. Implements OnModuleDestroy for graceful
  * shutdown so no in-flight messages are lost on container restart.
@@ -44,13 +50,28 @@ export class SuggestionResultPublisher implements OnModuleDestroy {
 
   constructor() {
     const namespace = process.env[SERVICE_BUS_NAMESPACE_ENV_KEY];
-    if (!namespace) {
-      throw new Error(
-        `Missing required environment variable: ${SERVICE_BUS_NAMESPACE_ENV_KEY}`,
+    const connectionString = process.env[CONNECTION_STRING_ENV_KEY];
+
+    if (namespace) {
+      // Production path: managed identity, no stored credentials.
+      const credential = new DefaultAzureCredential();
+      this.client = new ServiceBusClient(namespace, credential);
+    } else if (connectionString) {
+      // Fallback: connection string (used when only AZURE_SERVICE_BUS_CONNECTION_STRING is set).
+      this.logger.warn(
+        `${SERVICE_BUS_NAMESPACE_ENV_KEY} not set — falling back to ${CONNECTION_STRING_ENV_KEY}. ` +
+        'Set AZURE_SERVICE_BUS_NAMESPACE for managed-identity auth in production.',
       );
+      this.client = new ServiceBusClient(connectionString);
+    } else {
+      // Local-dev placeholder: module loads, but publish calls will fail at runtime.
+      this.logger.warn(
+        `Neither ${SERVICE_BUS_NAMESPACE_ENV_KEY} nor ${CONNECTION_STRING_ENV_KEY} is set. ` +
+        'Service Bus publish operations will fail. Configure one of these variables.',
+      );
+      this.client = new ServiceBusClient('local-dev-placeholder.servicebus.windows.net');
     }
-    const credential = new DefaultAzureCredential();
-    this.client = new ServiceBusClient(namespace, credential);
+
     this.sender = this.client.createSender(QUEUE_NAMES.SUGGESTION_RESULTS);
   }
 
