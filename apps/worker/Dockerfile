@@ -19,7 +19,7 @@ COPY apps/web/package.json            ./apps/web/
 COPY packages/shared-types/package.json ./packages/shared-types/
 COPY packages/database/package.json   ./packages/database/
 COPY packages/fsp-client/package.json ./packages/fsp-client/
-RUN npm ci --ignore-scripts
+RUN npm ci --ignore-scripts --force
 
 # ── Stage 3: builder ─────────────────────────────────────────
 FROM base AS builder
@@ -41,7 +41,7 @@ COPY apps/worker/package.json         ./apps/worker/
 COPY packages/shared-types/package.json ./packages/shared-types/
 COPY packages/database/package.json   ./packages/database/
 COPY packages/fsp-client/package.json ./packages/fsp-client/
-RUN npm ci --omit=dev --ignore-scripts
+RUN npm ci --omit=dev --ignore-scripts --force
 
 COPY --from=builder /app/apps/worker/dist           ./apps/worker/dist
 COPY --from=builder /app/packages/shared-types/dist ./packages/shared-types/dist
