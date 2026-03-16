@@ -489,9 +489,9 @@ export class OperatorsService {
       fspOperatorId: operator.fspOperatorId,
       name: operator.name,
       pollingTier: operator.pollingTier,
-      priorityWeights: (operator.priorityWeights
+      priorityWeights: operator.priorityWeights
         ? this.parsePriorityWeights(operator.priorityWeights)
-        : this.buildDefaultConfig()) as unknown as Record<string, unknown>,
+        : this.buildDefaultConfig(),
       policyConfig: {},
       isActive: operator.isActive,
       createdAt: operator.createdAt.toISOString(),
