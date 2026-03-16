@@ -42,27 +42,22 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
 
   /**
    * Opens the database connection when the NestJS module initialises.
-   * In development, if the database is unreachable (e.g. firewall, VPN),
-   * the app still starts and logs a warning so npm run dev can bring up
-   * all three apps; DB-dependent routes will fail until the DB is reachable.
-   * In production, connection failure throws so the process fails fast.
+   * If the database is unreachable (firewall, wrong credentials, etc.)
+   * the app still starts and logs a warning so that liveness probes pass
+   * and all routes register. DB-dependent routes will fail at request time
+   * with a clear Prisma error until the database becomes reachable.
    *
-   * @returns A Promise that resolves once the connection is established or (dev only) when connection fails.
-   * @throws In production, throws if the DATABASE_URL is unreachable.
+   * @returns A Promise that resolves once the connection is established or when connection fails.
    */
   async onModuleInit(): Promise<void> {
-    const isDev = process.env['NODE_ENV'] !== 'production';
     try {
       await this.$connect();
     } catch (err) {
-      if (isDev) {
-        this.logger.warn(
-          'Database unreachable at startup — app started anyway. DB-dependent routes will fail until the database is reachable (e.g. add your IP to the Azure PostgreSQL firewall).',
-          err instanceof Error ? err.message : String(err),
-        );
-        return;
-      }
-      throw err;
+      this.logger.warn(
+        'Database unreachable at startup — app started anyway. ' +
+        'DB-dependent routes will fail until the database is reachable.',
+        err instanceof Error ? err.message : String(err),
+      );
     }
   }
 
