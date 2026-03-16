@@ -100,6 +100,7 @@ export const USE_CASE_TYPE = {
   NEW_OPENING: 'NEW_OPENING',
   WAITLIST_FILL: 'WAITLIST_FILL',
   DISCOVERY: 'DISCOVERY',
+  NEXT_LESSON: 'NEXT_LESSON',
 } as const;
 
 /** Union type derived from USE_CASE_TYPE values. */
@@ -399,6 +400,24 @@ export const DISCOVERY_DEFAULT_SEARCH_WINDOW_DAYS = 14;
  * Used when the operator has not configured a specific duration.
  */
 export const DISCOVERY_DEFAULT_DURATION_MINUTES = 60;
+
+// ── Use Case D — Next Lesson constants ───────────────────────────────────────
+
+/**
+ * Maximum number of PENDING suggestions to create per next-lesson event.
+ */
+export const NEXT_LESSON_MAX_SUGGESTIONS = 3;
+
+/**
+ * Default number of calendar days ahead to search for next-lesson slots.
+ */
+export const NEXT_LESSON_SEARCH_WINDOW_DAYS = 14;
+
+/**
+ * Number of pending lessons at or above which the AutoSchedule solver is used
+ * instead of Find-a-Time for the next-lesson use case.
+ */
+export const NEXT_LESSON_AUTO_SCHEDULE_THRESHOLD = 3;
 
 /**
  * Default priority weight configuration applied when an operator has not

@@ -10,7 +10,7 @@
  *   NEW_OPENING       → WaitlistUseCaseService.processNewOpening()
  *   CANCELLATION      → RescheduleUseCaseService.processCancellation()
  *   DISCOVERY_REQUEST → DiscoveryUseCaseService.processDiscoveryRequest()
- *   STATUS_CHANGE     → (future use case — logged and discarded)
+ *   STATUS_CHANGE     → NextLessonUseCaseService.processLessonCompletion() (newStatus=COMPLETED)
  *
  * Flow per message:
  *   1. Validate the message body as a ChangeEventMessage.
@@ -26,6 +26,7 @@
  * PR: PR-13 — Use Case A — Waitlist
  * Updated: PR-14 — Use Case B — Reschedule (added CANCELLATION routing)
  * Updated: PR-15 — Use Case C — Discovery (added DISCOVERY_REQUEST routing)
+ * Updated: PR-16 — Use Case D — Next Lesson (STATUS_CHANGE → NextLessonUseCaseService)
  */
 
 import {
@@ -43,6 +44,7 @@ import { ServiceBusService } from '../service-bus/service-bus.service';
 import { WaitlistUseCaseService } from './waitlist/waitlist-use-case.service';
 import { RescheduleUseCaseService } from './reschedule/reschedule-use-case.service';
 import { DiscoveryUseCaseService } from './discovery/discovery-use-case.service';
+import { NextLessonUseCaseService } from './next-lesson/next-lesson-use-case.service';
 
 /**
  * Consumes messages from the change-events Service Bus queue and dispatches
@@ -51,7 +53,7 @@ import { DiscoveryUseCaseService } from './discovery/discovery-use-case.service'
  * NEW_OPENING       → WaitlistUseCaseService
  * CANCELLATION      → RescheduleUseCaseService
  * DISCOVERY_REQUEST → DiscoveryUseCaseService
- * STATUS_CHANGE     → logged and discarded (future use case)
+ * STATUS_CHANGE     → NextLessonUseCaseService (newStatus=COMPLETED; others logged and discarded)
  */
 @Injectable()
 export class ChangeEventConsumer implements OnModuleInit, OnModuleDestroy {
@@ -59,16 +61,18 @@ export class ChangeEventConsumer implements OnModuleInit, OnModuleDestroy {
   private receiver: ServiceBusReceiver | null = null;
 
   /**
-   * @param serviceBusService        - Owns the Azure Service Bus client.
-   * @param waitlistUseCaseService   - Handler for NEW_OPENING events.
-   * @param rescheduleUseCaseService - Handler for CANCELLATION events.
-   * @param discoveryUseCaseService  - Handler for DISCOVERY_REQUEST events.
+   * @param serviceBusService          - Owns the Azure Service Bus client.
+   * @param waitlistUseCaseService     - Handler for NEW_OPENING events.
+   * @param rescheduleUseCaseService   - Handler for CANCELLATION events.
+   * @param discoveryUseCaseService    - Handler for DISCOVERY_REQUEST events.
+   * @param nextLessonUseCaseService   - Handler for STATUS_CHANGE (COMPLETED) events.
    */
   constructor(
     private readonly serviceBusService: ServiceBusService,
     private readonly waitlistUseCaseService: WaitlistUseCaseService,
     private readonly rescheduleUseCaseService: RescheduleUseCaseService,
     private readonly discoveryUseCaseService: DiscoveryUseCaseService,
+    private readonly nextLessonUseCaseService: NextLessonUseCaseService,
   ) {}
 
   /** Subscribes to the change-events queue when the module initialises. */
@@ -144,11 +148,7 @@ export class ChangeEventConsumer implements OnModuleInit, OnModuleDestroy {
           break;
 
         case 'STATUS_CHANGE':
-          // Future use case — no handler in this PR
-          this.logger.debug(
-            `STATUS_CHANGE event received — no handler registered`,
-            { service: ChangeEventConsumer.name, operatorId: body.operatorId },
-          );
+          await this.nextLessonUseCaseService.processLessonCompletion(body);
           break;
 
         default:
