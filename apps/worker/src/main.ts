@@ -26,8 +26,8 @@ import { AppModule } from './app.module';
 
 const WORKER_PORT_DEFAULT = 3001;
 const PORT_FALLBACK_RANGE = 10;
-/** Web app dev server port — worker must not use this when falling back. */
-const WEB_DEV_PORT = 3002;
+/** Ports used by API (3000) and web (3002) in dev — worker must not use these when falling back. */
+const RESERVED_PORTS = new Set([3000, 3002]);
 
 /**
  * Returns the first port from the candidate list that is free to bind.
@@ -42,6 +42,11 @@ function findAvailablePort(candidates: number[]): Promise<number> {
       }
       const p = candidates[index];
       index += 1;
+      if (p === undefined) {
+        reject(new Error(`No available port among [${candidates.join(', ')}]`));
+        return;
+      }
+      const portToBind = p;
       const server = createServer();
       server.once('error', (err: NodeJS.ErrnoException) => {
         if (err.code === 'EADDRINUSE') {
@@ -51,9 +56,9 @@ function findAvailablePort(candidates: number[]): Promise<number> {
         }
       });
       server.once('listening', () => {
-        server.close(() => resolve(p));
+        server.close(() => resolve(portToBind));
       });
-      server.listen(p, '0.0.0.0');
+      server.listen(portToBind, '0.0.0.0');
     }
     tryNext();
   });
@@ -71,7 +76,7 @@ async function bootstrap(): Promise<void> {
   const candidates: number[] = [];
   for (let i = 0; i < PORT_FALLBACK_RANGE; i++) {
     const p = preferredPort + i;
-    if (p !== WEB_DEV_PORT) {
+    if (!RESERVED_PORTS.has(p)) {
       candidates.push(p);
     }
   }
